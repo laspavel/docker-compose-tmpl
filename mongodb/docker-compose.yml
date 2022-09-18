@@ -1,0 +1,35 @@
+version: "3.1"
+services:
+    mongodb:
+      image: mongo:5.0.6
+      container_name: ${ZONE}-mongo
+      restart: always
+      environment:
+        - MONGO_DATA_DIR=/data/db
+        - MONGO_LOG_DIR=/dev/null
+        - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
+        - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+        - MONGO_INITDB_DATABASE="${ZONE}-mdb1"
+      volumes:
+        - ./data/mongo:/data/db
+        - /etc/localtime:/etc/localtime:ro
+      ports:
+        - 37017:27017
+      command: mongod --logpath=/dev/null
+
+    mongoadmin:
+      container_name: ${ZONE}-mongo-express
+      image: mongo-express
+      restart: always
+      ports:
+        - 127.0.0.1:8957:8081
+      environment:
+        - ME_CONFIG_BASICAUTH_USERNAME=root1
+        - ME_CONFIG_BASICAUTH_PASSWORD=P@ssw0rd@2
+        - ME_CONFIG_MONGODB_SERVER=${ZONE}-mongo
+        - ME_CONFIG_MONGODB_PORT=27017
+        - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+        - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_ROOT_USERNAME}
+        - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_ROOT_PASSWORD}
+      depends_on: 
+        - mongodb

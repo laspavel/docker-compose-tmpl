@@ -1,0 +1,79 @@
+version: '3.1'
+
+networks:
+  network-zabbix:
+    driver: bridge
+
+services:
+  postgres-server:
+    image: postgres:latest
+    restart: always
+    networks:
+      - network-zabbix
+    environment:
+      POSTGRES_USER: ${PGUSER:-zabbix}
+      POSTGRES_PASSWORD: ${PGPASS:-zabbixX__2}
+      POSTGRES_DB: zabbix
+      PG_DATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./data/pgdata:/var/lib/postgresql/data
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:6.0.6-ol
+    hostname: zabbix-server
+    restart: always
+    networks:
+      - network-zabbix
+    environment: 
+      POSTGRES_USER: ${PGUSER:-zabbix}
+      POSTGRES_PASSWORD: ${PGPASS:-zabbixX__2}
+      POSTGRES_DB: zabbix
+      ZBX_HISTORYSTORAGETYPES: log,text
+      ZBX_DEBUGLEVEL: 1
+      ZBX_HOUSEKEEPINGFREQUENCY: 1
+      ZBX_MAXHOUSEKEEPERDELETE: 5000
+    depends_on:
+      - postgres-server
+    ports:
+      - 0.0.0.0:10051:10051
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./data/zabbix/alertscripts:/usr/lib/zabbix/alertscripts
+      - ./data/zabbix/externalscripts:/usr/lib/zabbix/externalscripts
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pgsql:6.0.6-ol
+    restart: always
+    networks:
+      - network-zabbix
+    environment:
+      DB_SERVER_HOST: postgres-server
+      POSTGRES_USER: ${PGUSER:-zabbix}
+      POSTGRES_PASSWORD: ${PGPASS:-zabbixX__2}
+      POSTGRES_DB: zabbix
+      ZBX_SERVER_HOST: zabbix-server
+      ZBX_POSTMAXSIZE: 64M
+      PHP_TZ: "Europe/Kiev"  
+      ZBX_MAXEXECUTIONTIME: 500
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - postgres-server
+      - zabbix-server
+    ports:
+      - 8084:8080
+
+  grafana-xxl: 
+    image: monitoringartist/grafana-xxl:8.3
+    restart: always
+    networks:
+      - network-zabbix
+    environment:
+      GF_SERVER_ROOT_URL: ${MON_URL:-http://localhost}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_ADMINPASS:-zabbix__2}
+      GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource,alexanderzobnin-zabbix-app"
+    ports:
+      - 3000:3000
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./data/grafana/db:/var/lib/grafana
+      - ./data/grafana/provisioning:/etc/grafana/provisioning

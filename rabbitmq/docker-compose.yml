@@ -1,0 +1,13 @@
+version: "3.1"
+services:
+    rabbitmq:
+      image: rabbitmq:3.9.13-management
+      restart: always
+      container_name: ${ZONE}-rabbitmq
+      hostname: ${ZONE}-rabbitmq
+      ports:
+        - 127.0.0.1:25872:15672
+        - 35872:5672
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+        - ./data/rabbitmq:/var/lib/rabbitmq:rw

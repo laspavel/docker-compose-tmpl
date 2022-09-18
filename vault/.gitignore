@@ -1,0 +1,5 @@
+vault/data/*
+vault/logs/*
+consul/data/*
+*.pwd.json
+.DS_Store

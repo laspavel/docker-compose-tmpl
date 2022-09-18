@@ -1,0 +1,19 @@
+version: '3.7'
+services:
+  jenkins:
+    image: jenkins/jenkins:2.321
+    privileged: true
+    user: root
+    restart: always
+    ports:
+      - 127.0.0.1:8999:8080
+      - 127.0.0.1:50000:50000
+    container_name: jenkins
+    volumes:
+      - /etc/localtime:/etc/localtime:ro 
+      - /tmp:/tmp
+      - /home/dockuser/jenkins:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/local/bin/docker
+      - /usr/bin/docker-compose:/usr/local/bin/docker-compose
+      - /home/dockuser:/home/dockuser

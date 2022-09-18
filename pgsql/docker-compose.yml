@@ -1,0 +1,30 @@
+version: "3.1"
+services:
+    pgsql:
+      container_name: ${ZONE}-pgsql
+      image: postgres:14.2-alpine3.15
+      environment:
+        POSTGRES_USER: ${POSTGRES_USER:-postgres}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-P@ssw0rd@2}
+        PGDATA: /data/postgres
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+        - ./data/pgsql:/data/postgres
+      ports:
+        - 5432:5432
+      restart: always
+
+    pgadmin:
+      image: dpage/pgadmin4
+      container_name: ${ZONE}-pgadmin
+      environment:
+        DEFAULT_USER: ${DEFAULT_USER:-root1}
+        DEFAULT_PASSWORD: ${DEFAULT_PASSWORD:-P@ssw0rd@2}
+        PGADMIN_DEFAULT_EMAIL: ${DEFAULT_USER:-root1@example.com}
+        PGADMIN_DEFAULT_PASSWORD: ${DEFAULT_PASSWORD:-P@ssw0rd@2}
+        PGADMIN_LISTEN_ADDRESS: 0.0.0.0
+      volumes:
+        - ./data/pgadmin:/var/lib/pgadmin
+      ports:
+        - 127.0.0.1:8929:80
+      restart: always

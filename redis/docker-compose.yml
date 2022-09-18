@@ -1,0 +1,23 @@
+version: "3.1"
+services:
+    redis:
+      image: redis:6.2.6-alpine3.15
+      container_name: ${ZONE}-redis
+      restart: always
+      ports:
+        - 36379:6379
+      volumes:
+        - ./data/redis:/data:rw
+        - /etc/localtime:/etc/localtime:ro
+
+    phpredmin:
+      image: sasanrose/phpredmin
+      container_name: ${ZONE}-phpredmin
+      environment:
+        - PHPREDMIN_DATABASE_REDIS_0_HOST=redis
+      ports:
+        - 127.0.0.1:8933:80
+      depends_on:
+        - redis
+      restart: always
+

@@ -1,0 +1,11 @@
+version: '3'
+services:
+  haproxy:
+    image: "haproxy:2.5.3-alpine3.15"
+    restart: always
+    ports:
+      - 15350:15350
+      - 8404:8404
+    volumes:
+     - /etc/localtime:/etc/localtime:ro
+     - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg

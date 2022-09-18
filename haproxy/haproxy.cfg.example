@@ -1,0 +1,29 @@
+global
+  maxconn 150000
+  log stdout format raw local0 info
+
+defaults
+  mode http
+  timeout client 10s
+  timeout connect 5s
+  timeout server 10s
+  timeout http-request 10s
+  log global
+
+frontend stats
+  bind *:8404
+  stats enable
+  stats uri /
+  stats refresh 10s
+
+frontend fineapp_api_frontend
+  bind *:8888
+  maxconn 150000
+  mode http
+  default_backend fineapp_api_backend
+
+backend fineapp_api_backend
+  balance roundrobin
+  mode http
+  server s1 192.168.88.253:8084 check
+  server s2 192.168.88.252:8084 check

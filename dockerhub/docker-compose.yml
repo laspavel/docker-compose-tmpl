@@ -1,0 +1,20 @@
+version: '3'
+services:
+  registry:
+    image: registry
+    container_name: registry
+    restart: always
+    ports:
+      - 127.0.0.1:5000:5000
+    volumes:
+#      - ./reg-config.yml:/etc/docker/registry/config.yml:ro
+      - ./data:/var/lib/registry:rw
+ 
+  registry-ui:
+    image: quiq/docker-registry-ui
+    container_name: registry-ui
+    restart: always
+    volumes:
+      - ./config-ui.yml:/opt/config.yml:ro
+    ports:
+      - 127.0.0.1:8000:8000

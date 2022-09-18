@@ -1,0 +1,21 @@
+version: "3.1"
+services:
+    minio:
+      image: minio/minio:RELEASE.2022-02-05T04-40-59Z
+      container_name: ${ZONE}-s3
+      volumes:
+        - ./data:/export
+      ports:
+        - 127.0.0.1:8922:9000
+        - 127.0.0.1:8921:9001
+      environment:
+        MINIO_ROOT_USER: ${MINIO_ROOT_USER:-root1}
+        MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-P@ssw0rd@2}
+        MINIO_BROWSER_REDIRECT_URL: ${S3URL}
+      command: server /export --console-address ":9001"
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+        interval: 30s
+        timeout: 20s
+        retries: 3
+
