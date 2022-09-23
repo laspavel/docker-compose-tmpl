@@ -1,0 +1,19 @@
+version: "3.1"
+services:
+    seq:
+      container_name: seq
+      image: datalust/seq:2022.1.7929
+      restart: always
+      ports:
+        - 127.0.0.1:59080:80
+        - 0.0.0.0:5341:5341
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+        - ./data/seq:/data:rw
+      environment:
+        ACCEPT_EULA: "Y"
+        SEQ_FIRSTRUN_ADMINUSERNAME: ${SEQ_FIRSTRUN_ADMINUSERNAME:-admin}
+        SEQ_API_CANONICALURI: ${SEQ_API_CANONICALURI:-http://localhost}
+        BASE_URI: ${BASE_URI:-http://localhost}
+        SEQ_FIRSTRUN_ADMINPASSWORDHASH: ${SEQ_FIRSTRUN_ADMINPASSWORDHASH}
+
