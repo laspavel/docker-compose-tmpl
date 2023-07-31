@@ -23,7 +23,7 @@ pysnmp==4.4.12
 python-dateutil==2.8.1
 PyYAML==5.3
 pyzabbix==0.7.4
-requests==2.18.4
+requests==2.31.0
 six==1.14.0
 toml==0.10.0
 urllib3==1.22
