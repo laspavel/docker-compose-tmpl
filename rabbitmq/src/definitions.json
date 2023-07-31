@@ -1,0 +1,49 @@
+{
+    "rabbit_version": "3.5.7",
+    "users": [
+        {
+          "name": "cmdbdev_client",
+          "password_hash": "vsTrVki3N9QWTiAmcqZngBAKpc+5jMVTWxHmf0kwWHM7Vnbs",
+          "hashing_algorithm": "rabbit_password_hashing_sha256",
+          "tags": ""
+        },
+        {
+            "name": "cmdbdev_access",
+            "password_hash": "6gn0Zkayfzk7DkR2XC2JFyZtbUnvNwoKNCVYajF4k2KEPP6w",
+            "hashing_algorithm": "rabbit_password_hashing_sha256",
+            "tags": "administrator"
+        }
+      ],
+    "vhosts": [{
+            "name": "/"
+        }, {
+            "name": "cmdbdev"
+        }],
+    "permissions": [
+        {
+          "user": "cmdbdev_client",
+          "vhost": "cmdbdev",
+          "configure": ".*",
+          "write": ".*",
+          "read": ".*"
+      },
+      {
+        "user": "cmdbdev_access",
+        "vhost": "/",
+        "configure": ".*",
+        "write": ".*",
+        "read": ".*"
+      }
+       ],
+    "parameters": [],
+    "policies": [],
+    "queues": [
+        {
+          "name": "test",
+          "vhost": "cmdbdev",
+          "durable": true,
+          "auto_delete": false,
+          "arguments": {}
+        },
+   ]
+}

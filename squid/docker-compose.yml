@@ -1,0 +1,14 @@
+version: "3.1"
+services:
+    squid1:
+      image: laspavel/squid:5.2-r0
+      container_name: squid1
+      restart: always
+      ports:
+        - 8080:3128
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+        - /var/log/squid:/var/log/squid
+        - ./conf/squid.conf:/etc/squid/squid.conf:ro
+        - ./conf/src.allow.all:/etc/squid/src.allow.all:ro
+        - ./conf/src.allow.tmp:/etc/squid/src.allow.tmp:ro

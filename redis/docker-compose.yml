@@ -8,6 +8,7 @@ services:
         - 36379:6379
       volumes:
         - ./data/redis:/data:rw
+        - ./src/redis.conf:/usr/local/etc/redis/redis.conf:ro
         - /etc/localtime:/etc/localtime:ro
 
     phpredmin:

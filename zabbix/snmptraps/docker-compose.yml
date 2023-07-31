@@ -1,0 +1,23 @@
+version: '3.1'
+
+networks:
+  network-zabbix:
+#    driver: bridge
+
+
+services:
+  zabbix-snmptraps1:
+    image: zabbix/zabbix-snmptraps:5.4.10-alpine
+    hostname: zabbix-snmptraps1
+    restart: always
+    user: root
+    networks:
+      - network-zabbix
+    ports:
+      - 162:1162/udp
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./data/snmptraps:/var/lib/zabbix/snmptraps:rw
+      - ./data/mibs:/var/lib/zabbix/mibs:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

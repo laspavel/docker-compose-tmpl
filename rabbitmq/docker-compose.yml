@@ -11,3 +11,7 @@ services:
       volumes:
         - /etc/localtime:/etc/localtime:ro
         - ./data/rabbitmq:/var/lib/rabbitmq:rw
+        - ./src/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+        - ./src/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+        - ./src/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+

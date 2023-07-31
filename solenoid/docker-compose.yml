@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  selenoid:
+    build: solenoid
+    container_name: solenoid
+    network_mode: bridge
+    restart: always
+    ports:
+      - "4444:4444"
+    volumes: # will work only on linux for now
+      - "$PWD/etc/selenoid:/etc/selenoid/"  # assumed <current-dir> contains etc/selenoid/browsers.json
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    command: ["-conf", "/etc/selenoid/browsers.json", "-limit", "16"]
+    #command: sh -c 'update-ca-certificates && ["-conf", "/etc/selenoid/browsers.json", "-limit", "4"]'
+
+  selenoid-ui:
+    build: solenoid-ui
+    network_mode: bridge
+    restart: always
+    depends_on:
+      - selenoid
+    links:  # todo: refactor because links are deprecated
+      - selenoid
+    ports:
+      - "8080:8080"
+   # volumes:
+    #  - "/etc/pki/ca-trust/source/anchors/ISSUING2016_CA1.crt:/etc/ssl/certs/ISSUING2016_CA1.crt"
+    command: ["--selenoid-uri", "http://selenoid:4444"]
+   # command: sh -c 'update-ca-certificates && ["--selenoid-uri", "http://selenoid:4444"]'

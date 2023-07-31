@@ -1,0 +1,14 @@
+version: '3.6'
+
+services:
+  jmeter-app1:
+    image: egaillardon/jmeter-plugins
+    volumes:
+      - ./:/jmeter
+    environment:
+      JVM_ARGS: -Xms10240m -Xmx10240m
+    extra_hosts:
+      - rancher-dev2.store-plus.atbmarket.com:10.0.9.39
+    command: "--nongui --testfile test1.jmx --logfile result.jtl"
+
+

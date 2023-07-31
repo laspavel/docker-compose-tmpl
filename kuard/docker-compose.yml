@@ -1,0 +1,7 @@
+version: '3'
+services:
+  kuard:
+      image: "laspavel/kuard"
+      restart: always
+      ports:
+       - 8080:8080

@@ -2,6 +2,7 @@ version: '3.7'
 services:
   jenkins:
     image: jenkins/jenkins:2.321
+#    build: .
     privileged: true
     user: root
     restart: always

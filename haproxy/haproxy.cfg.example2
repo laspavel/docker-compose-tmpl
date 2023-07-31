@@ -1,0 +1,59 @@
+global
+#   nbproc 4
+#   cpu-map 1 0
+#   cpu-map 2 1
+#   cpu-map 3 2
+#   cpu-map 4 3
+   maxconn 150000
+   log /dev/log local0
+   log /dev/log local1 notice
+#   chroot /var/lib/haproxy
+   stats timeout 30s
+   user root
+   group root
+   daemon
+   tune.ssl.cachesize 1000000
+   pidfile /var/run/haproxy.pid
+   stats socket /var/run/haproxy.sock mode 777 level admin expose-fd listeners
+#   stats bind-process 1
+
+defaults
+   maxconn 50000
+   log global
+   mode http
+   option dontlognull
+   timeout connect 50000
+   timeout client 500000
+   timeout server 500000
+
+frontend stats
+   bind *:8404
+   option http-use-htx
+   http-request use-service prometheus-exporter if { path /metrics }
+   stats enable
+   stats uri /stats
+   stats refresh 10s
+
+frontend stat-1
+   bind *:9001
+   mode http
+#   bind-process 1
+   stats enable
+   stats uri /haproxy?stats
+   stats realm Haproxy\ Statistics
+   stats auth howtoforge:howtoforge            #User and Password for login to the monitoring dashboard
+   stats admin if TRUE
+
+frontend http_front
+    maxconn 50000
+    bind *:80
+    mode http
+    option forwardfor except 127.0.0.0/8
+    default_backend http_back
+      
+backend http_back
+   balance roundrobin
+   mode http
+       server main-p01 192.168.88.19:80
+       server main-p02 192.168.88.22:80
+   
