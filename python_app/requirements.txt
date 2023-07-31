@@ -21,7 +21,7 @@ pymssql==2.2.1
 pysmi==0.3.4
 pysnmp==4.4.12
 python-dateutil==2.8.1
-PyYAML==5.3
+PyYAML==5.4
 pyzabbix==0.7.4
 requests==2.18.4
 six==1.14.0
