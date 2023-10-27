@@ -1,3 +1,5 @@
+## Стартовое конфигурирование.
+
 * vault login
 * vault auth enable approle
 * vault write auth/approle/role/jenkins-role  token_num_users=0   secret_id_num_uses=0 policies=“jenkins”
@@ -28,5 +30,38 @@ path "secrets/infr-jenkins/ci-cd/prod" {
 * vault policy write jenkins jenkins-policy.hcl
 * vault read secrets/infr-jenkins/ci-cd/fineapp-deploy secrets/infr-jenkins/ci-cd/fineapp-deploy
 
-##### https://blog.knoldus.com/integrating-jenkins-hashicorp-vault/
+## Включение AD авторизации.
 
+    vault login token=<TOKEN>
+    vault auth enable ldap
+    vault write auth/ldap/config \
+        url="ldap://example.com" \
+        userattr=sAMAccountName \
+        upndomain="example.com" \
+        userdn="ou=Users,dc=example,dc=com" \
+        groupdn="ou=Users,dc=example,dc=com" \
+        groupfilter="(|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))" \
+        groupattr="memberOf" \
+        binddn="cn=vault,ou=users,dc=example,dc=com" \
+        bindpass='My$ecrt3tP4ss'
+
+**example:**
+
+       vault write auth/ldap/config \
+            url="ldap://mycdserver.com" \
+            userattr=sAMAccountName \
+            upndomain="mydomain.com" \
+            userdn="dc=mydomain,dc=com" \
+            groupfilter="(|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))" \
+            groupattr="cn" \
+            binddn="CN=my_ldap_search,OU=myGroup,OU=Service-Accounts,DC=mydomain,DC=com" \
+            bindpass='Passss'
+
+## Включение AUDIT:
+
+    vault login token=<TOKEN>
+    vault audit enable file file_path=/vault/logs/vault_audit.log
+
+-------
+* https://blog.knoldus.com/integrating-jenkins-hashicorp-vault/
+* https://www.vaultproject.io/api-docs/index/
