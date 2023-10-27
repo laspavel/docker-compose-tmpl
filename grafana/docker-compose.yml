@@ -1,0 +1,58 @@
+version: "3"
+services:
+  grafana:
+    links:
+      - grafana_db:grafana_db
+    image: grafana/grafana:7.5.4
+    restart: always
+    volumes:
+      - ./data/grafana:/var/lib/grafana:rw
+    environment:
+      - GF_DATABASE_HOST=grafana_db:3306
+      - GF_DATABASE_NAME=grafana
+      - GF_DATABASE_USER=grafana
+      - GF_DATABASE_PASSWORD=password
+      - GF_DATABASE_TYPE=mysql
+      - GF_DATABASE_MAX_OPEN_CONN=300
+    ports:
+      - "3000:3000"
+    depends_on: ["grafana_db"]
+  grafana_db:
+    image: mariadb:10.1.44
+    restart: always
+    volumes:
+        - ./data/db:/var/lib/mysql
+        - ./data/srcdata:/docker-entrypoint-initdb.d
+        - /etc/localtime:/etc/localtime:ro
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: grafana
+      MYSQL_USER: grafana
+      MYSQL_PASSWORD: password
+    command:
+      [
+        mysqld,
+        --character-set-server=utf8mb4,
+        --collation-server=utf8mb4_unicode_ci,
+        --innodb_monitor_enable=all,
+        --max-connections=1001,
+      ]
+    ports:
+      - "3306:3006"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: grafana_phpmyadmin
+    restart: always
+    ports:
+      - "8888:80"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      PMA_HOSTS: grafana_db
+      PMA_VERBOSES: Grafana Database
+    depends_on:
+      - grafana_db
+
