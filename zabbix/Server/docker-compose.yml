@@ -61,7 +61,30 @@ services:
       - zabbix-server
     ports:
       - 8084:8080
-
+  zabbix-agent:
+    image: zabbix/zabbix-agent2:6.0.6-ol
+    container_name: zabbix-agent2
+    hostname: zabbix-agent
+    privileged: true
+    networks:
+      - network-zabbix
+#    network_mode: "host"
+    restart: always
+    user: "0:0"
+    environment:
+      - ZBX_SERVER_HOST=zabbix-server
+    ports:
+      - 0.0.0.0:10050:10050
+      - 0.0.0.0:31999:31999
+    volumes:
+      - /proc:/proc
+      - /var/run:/var/run
+      - /sys:/sys:ro
+      - /:/rootfs:ro
+      - /dev/sda1:/dev/sda1
+      - /run/containerd/containerd.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+      - ./data/zabbix-agent:/etc/zabbix/zabbix_agentd.d
   grafana-xxl: 
     image: monitoringartist/grafana-xxl:8.3
     restart: always
