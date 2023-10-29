@@ -1,0 +1,9 @@
+version: "3.1"
+services:
+    squid1:
+      build: src
+      container_name: squid1
+      working_dir: /app
+      restart: always
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
