@@ -1,0 +1,13 @@
+/var/log/squid/cache.log 
+/var/log/squid/squid.log
+{
+	weekly
+	rotate 6
+	compress
+	delaycompress
+	missingok
+	notifempty
+        postrotate
+           cd /Dockers/squid/ && ./Restart.sh
+        endscript
+}

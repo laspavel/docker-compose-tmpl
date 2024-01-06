@@ -15,5 +15,9 @@ docker restart $1
 
 # Check GitLab
 docker exec -it $1 gitlab-rake gitlab:check SANITIZE=true
+docker exec -it $1 gitlab-rake gitlab:doctor:secrets
+docker exec -it $1 gitlab-rake gitlab:artifacts:check
+docker exec -it $1 gitlab-rake gitlab:lfs:check
+docker exec -it $1 gitlab-rake gitlab:uploads:check
 
 
