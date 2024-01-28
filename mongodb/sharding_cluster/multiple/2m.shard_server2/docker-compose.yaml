@@ -1,0 +1,50 @@
+version: '3'
+services:
+  shardsvr2_1:
+    container_name: shardsvr2_1
+    image: mongo:7.0.4
+    restart: always
+    command: mongod --auth --replSet shard2_rs --config /etc/mongod.conf
+    environment:
+      MONGO_DATA_DIR: /data/db
+      MONGO_LOG_DIR: /dev/null
+    ports:
+      - 20004:27017
+    volumes:
+      - ./data/shardsvr2_1:/data/db
+      - /etc/timezone:/etc/timezone:ro
+      - ./mongod_shardsvr.conf:/etc/mongod.conf:ro
+      - ./mongodb.key:/mongodb.key
+      - /usr/share/zoneinfo/Europe/Kiev:/etc/localtime:ro
+  shardsvr2_2:
+    container_name: shardsvr2_2
+    image: mongo:7.0.4
+    restart: always
+    command: mongod --auth --replSet shard2_rs --config /etc/mongod.conf
+    environment:
+      MONGO_DATA_DIR: /data/db
+      MONGO_LOG_DIR: /dev/null
+    ports:
+      - 20005:27017
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - ./mongod_shardsvr.conf:/etc/mongod.conf:ro
+      - ./mongodb.key:/mongodb.key
+      - /usr/share/zoneinfo/Europe/Kiev:/etc/localtime:ro
+      - ./data/shardsvr2_2:/data/db
+  shardsvr2_3:
+    container_name: shardsvr2_3
+    image: mongo:7.0.4
+    restart: always
+    command: mongod --auth --replSet shard2_rs --config /etc/mongod.conf
+    environment:
+      MONGO_DATA_DIR: /data/db
+      MONGO_LOG_DIR: /dev/null
+    ports:
+      - 20006:27017
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - ./mongod_shardsvr.conf:/etc/mongod.conf:ro
+      - ./mongodb.key:/mongodb.key
+      - /usr/share/zoneinfo/Europe/Kiev:/etc/localtime:ro
+      - ./data/shardsvr2_3:/data/db
