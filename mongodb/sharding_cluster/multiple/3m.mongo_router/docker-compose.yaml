@@ -1,0 +1,17 @@
+version: '3'
+services:
+  mongos:
+    container_name: mongos
+    image: mongo:7.0.4
+    restart: always
+    command: mongos --bind_ip_all --configdb config_rs/<your-ip>:10001,<your-ip>:10002,<your-ip>:10003 --port 27017 --keyFile /mongodb.key
+    environment:
+      MONGO_DATA_DIR: /data/db
+      MONGO_LOG_DIR: /dev/null
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /usr/share/zoneinfo/Europe/Kiev:/etc/localtime:ro
+      - ./mongodb.key:/mongodb.key
+      - ./data/mongos:/data/db
+    ports:
+      - 37517:27017

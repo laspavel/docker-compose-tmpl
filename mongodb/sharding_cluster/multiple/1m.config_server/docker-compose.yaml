@@ -1,0 +1,38 @@
+version: '3'
+services:
+  configsvr1:
+    container_name: configsvr1
+    image: mongo:7.0.4
+    restart: always
+    command: mongod --auth --bind_ip_all --configsvr --replSet config_rs --dbpath /data/db --oplogSize 16 --port 27017 --keyFile /mongodb.key
+    ports:
+      - 10001:27017
+    volumes:
+      - ./data/configsvr1:/data/db
+      - /etc/timezone:/etc/timezone:ro
+      - ./mongodb.key:/mongodb.key
+      - /usr/share/zoneinfo/Europe/Kiev:/etc/localtime:ro
+  configsvr2:
+    container_name: configsvr2
+    image: mongo:7.0.4
+    restart: always
+    command: mongod --auth --bind_ip_all --configsvr --replSet config_rs --dbpath /data/db --oplogSize 16 --port 27017 --keyFile /mongodb.key
+    ports:
+      - 10002:27017
+    volumes:
+      - ./data/configsvr2:/data/db
+      - /etc/timezone:/etc/timezone:ro
+      - ./mongodb.key:/mongodb.key
+      - /usr/share/zoneinfo/Europe/Kiev:/etc/localtime:ro
+  configsvr3:
+    container_name: configsvr3
+    image: mongo:7.0.4
+    restart: always
+    command: mongod --auth --bind_ip_all --configsvr --replSet config_rs --dbpath /data/db --oplogSize 16 --port 27017 --keyFile /mongodb.key
+    ports:
+      - 10003:27017
+    volumes:
+      - ./data/configsvr3:/data/db
+      - /etc/timezone:/etc/timezone:ro
+      - ./mongodb.key:/mongodb.key
+      - /usr/share/zoneinfo/Europe/Kiev:/etc/localtime:ro
