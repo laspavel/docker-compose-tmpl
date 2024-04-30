@@ -1,7 +1,7 @@
 version: "3.1"
 services:
     squid1:
-      image: laspavel/squid:5.2-r0
+      image: laspavel/squid:6.6-r0
       container_name: squid1
       restart: always
       ports:

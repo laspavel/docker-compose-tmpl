@@ -6,13 +6,26 @@ services:
     container_name: solenoid
     network_mode: bridge
     restart: always
+    
     ports:
       - "4444:4444"
     volumes: # will work only on linux for now
       - "$PWD/etc/selenoid:/etc/selenoid/"  # assumed <current-dir> contains etc/selenoid/browsers.json
       - "/var/run/docker.sock:/var/run/docker.sock"
     command: ["-conf", "/etc/selenoid/browsers.json", "-limit", "16"]
-    #command: sh -c 'update-ca-certificates && ["-conf", "/etc/selenoid/browsers.json", "-limit", "4"]'
+#    command: sh -c 'ROOT_CA_CA1_CONTENTS=$(cat /1/ca1.pem | base64 -w0) && ["-conf", "/etc/selenoid/browsers.json", "-limit", "4"]'
+
+#  vnc-chrome:
+#    build: vnc-chrome
+#    container_name: vnc_chrome
+#    network_mode: bridge
+#    restart: always
+#    depends_on:
+#      - selenoid
+#    links:  # todo: refactor because links are deprecated
+#      - selenoid
+#    ports:
+#      - "4444:4444"
 
   selenoid-ui:
     build: solenoid-ui

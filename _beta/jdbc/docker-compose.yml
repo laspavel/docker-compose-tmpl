@@ -1,0 +1,45 @@
+version: '3.3'
+services:
+  debezium:
+    container_name: debezium
+    image: debezium/connect
+    environment:
+      - BOOTSTRAP_SERVERS=192.168.121.127:9092,192.168.121.160:9092,192.168.121.144:9092,192.168.132.182:9092,192.168.132.121:9092,192.168.132.127:9092
+      - GROUP_ID=1
+      - CONFIG_STORAGE_TOPIC=my_connect_configs
+      - OFFSET_STORAGE_TOPIC=my_connect_offsets
+      - STATUS_STORAGE_TOPIC=my_connect_statuses
+#      - CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR=2
+#      - CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR=2
+#      - CONNECT_STATUS_STORAGE_REPLICATION_FACTOR=2
+    ports:
+      - 8083:8083
+      
+   connect:
+    image: confluentinc/cp-kafka-connect:3.3.0
+    hostname: connect
+    container_name: connect
+    depends_on:
+      - schema_registry
+    ports:
+      - "8083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: '192.168.121.127:9092,192.168.121.160:9092,192.168.121.144:9092,192.168.132.182:9092,192.168.132.121:9092,192.168.132.127:9092'
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: compose-connect-group
+      CONNECT_CONFIG_STORAGE_TOPIC: docker-connect-configs
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema_registry:8081'
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema_registry:8081'
+      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_ZOOKEEPER_CONNECT: '192.168.121.127:2181'
+    volumes:
+      - ./kafka-connect:/etc/kafka-connect/jars
