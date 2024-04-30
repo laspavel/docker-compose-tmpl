@@ -1,0 +1,2 @@
+02 0,6,12,18 * * * root cd /root/repo_mirror/centos7 && docker compose up -d
+

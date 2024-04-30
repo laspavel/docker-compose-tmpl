@@ -1,0 +1,6 @@
+[squid]
+name=Squid repo for Oracle Linux 8 - $basearch
+baseurl=http://www1.ngtech.co.il/repo/oracle/8/$basearch/
+failovermethod=priority
+enabled=1
+gpgcheck=0

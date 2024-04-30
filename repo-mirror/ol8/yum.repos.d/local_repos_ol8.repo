@@ -1,0 +1,69 @@
+[local_ol8_baseos_latest]
+name=Oracle Linux $releasever Latest ($basearch)
+baseurl=https://repo.example.com/ol/8/ol8_baseos_latest/
+gpgkey=https://repo.example.com/ol/8/RPM-GPG-KEY-oracle-ol8
+gpgcheck=1
+enabled=0
+
+[local_ol8_appstream]
+name=Appstream for Oracle Linux $releasever ($basearch)
+baseurl=https://repo.example.com/ol/8/ol8_appstream/
+gpgkey=https://repo.example.com/ol/8/RPM-GPG-KEY-oracle-ol8
+gpgcheck=1
+enabled=0
+
+[local_ol8_UEKR7]
+name=Local Unbreakable Enterprise Kernel for Oracle Linux $releasever ($basearch)
+baseurl=https://repo.example.com/ol/8/ol8_UEKR7/
+gpgkey=https://repo.atbmrket.com/ol/8/RPM-GPG-KEY-oracle-ol8
+gpgcheck=1
+enabled=0
+
+[local_ol8_EPEL]
+name=Local EPEL for Oracle Linux $releasever ($basearch)
+baseurl=https://repo.example.com/ol/8/ol8_developer_EPEL/
+gpgkey=https://repo.example.com/ol/8/RPM-GPG-KEY-oracle-ol8
+gpgcheck=1
+enabled=0
+
+[local_ol8_EPEL_modular]
+name=Local EPEL Modular for Oracle Linux $releasever ($basearch)
+baseurl=https://repo.example.com/ol/8/ol8_developer_EPEL_modular/
+gpgkey=https://repo.example.com/ol/8/RPM-GPG-KEY-oracle-ol8
+gpgcheck=1
+enabled=0
+
+[local_ol8_zabbix]
+name=Local Zabbix Official Repository $releasever ($basearch)
+baseurl=https://repo.example.com/ol/8/zabbix/
+gpgkey=https://repo.example.com/ol/8/RPM-GPG-KEY-oracle-ol8
+gpgcheck=1
+enabled=0
+
+[local_ol8_zabbix_agent2_plugins]
+name=Local Zabbix Official Repository (Agent2 Plugins)($basearch)
+baseurl=https://repo.example.com/ol/8/zabbix-agent2-plugins/
+gpgkey=https://repo.example.com/ol/8/RPM-GPG-KEY-oracle-ol8
+gpgcheck=1
+enabled=0
+
+[local_ol8_zabbix_not_supported]
+name=Local Zabbix Official Repository (not-supported)($basearch)
+baseurl=https://repo.example.com/ol/8/zabbix-non-supported/
+gpgkey=https://repo.example.com/ol/8/RPM-GPG-KEY-oracle-ol8
+gpgcheck=1
+enabled=0
+
+[local_ol8_Docker_CE_Stable]
+name=Local Docker CE Stable ($basearch)
+baseurl=https://repo.example.com/ol/8/docker-ce-stable/
+gpgkey=https://repo.example.com/ol/8/RPM-GPG-KEY-oracle-ol8
+gpgcheck=1
+enabled=0
+
+[local_ol8_SQUID]
+name=Local_SQUID ($basearch)
+baseurl=https://repo.example.com/ol/8/squid/
+gpgkey=https://repo.example.com/ol/8/RPM-GPG-KEY-oracle-ol8
+gpgcheck=1
+enabled=0

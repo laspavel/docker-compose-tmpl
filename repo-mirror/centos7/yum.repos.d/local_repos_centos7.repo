@@ -1,0 +1,34 @@
+[local-base]
+name=CentOS Base
+baseurl=http://repo.example.com/centos/7/base/
+gpgkey=http://repo.example.com/centos/7/RPM-GPG-KEY-CentOS-7
+gpgcheck=0
+enabled=1
+
+[local-centosplus]
+name=CentOS CentOSPlus
+baseurl=http://repo.example.com/centos/7/centosplus/
+gpgkey=http://repo.example.com/centos/7/RPM-GPG-KEY-CentOS-7
+gpgcheck=0
+enabled=1
+
+[local-extras]
+name=CentOS Extras
+baseurl=http://repo.example.com/centos/7/extras/
+gpgkey=http://repo.example.com/centos/7/RPM-GPG-KEY-CentOS-7
+gpgcheck=0
+enabled=1
+
+[local-updates]
+name=CentOS Updates
+baseurl=http://repo.example.com/centos/7/updates/
+gpgkey=http://repo.example.com/centos/7/RPM-GPG-KEY-CentOS-7
+gpgcheck=0
+enabled=1
+
+[local-epel]
+name=CentOS Epel 
+baseurl=http://repo.example.com/centos/7/epel/
+gpgkey=http://repo.example.com/centos/7/RPM-GPG-KEY-CentOS-7
+gpgcheck=0
+enabled=1

@@ -1,0 +1,9 @@
+version: "3.1"
+services:
+    mirror_centos7:
+      build: scripts
+      container_name: centos7_mirror
+      volumes:
+        - /u01/repo:/d01
+        - /etc/localtime:/etc/localtime:ro
+

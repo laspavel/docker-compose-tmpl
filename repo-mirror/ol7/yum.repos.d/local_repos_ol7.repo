@@ -1,0 +1,27 @@
+[local_ol7_latest]
+name=Local Oracle Linux $releasever Latest ($basearch)
+baseurl=https://repo.example.com/ol/7/ol7_latest/
+gpgkey=https://repo.example.com/ol/7/RPM-GPG-KEY-oracle-ol7
+gpgcheck=1
+enabled=0
+
+[local_ol7_UEKR5]
+name=Local Unbreakable Enterprise Kernel for Oracle Linux $releasever ($basearch)
+baseurl=https://repo.example.com/ol/7/ol7_UEKR5/
+gpgkey=https://repo.example.com/ol/7/RPM-GPG-KEY-oracle-ol7
+gpgcheck=1
+enabled=0
+
+[local_ol7_UEKR6]
+name=Local Unbreakable Enterprise Kernel for Oracle Linux $releasever ($basearch)
+baseurl=https://repo.example.com/ol/7/ol7_UEKR6/
+gpgkey=https://repo.atbmrket.com/ol/7/RPM-GPG-KEY-oracle-ol7
+gpgcheck=1
+enabled=0
+
+[local_ol7_EPEL]
+name=Local EPEL for Oracle Linux $releasever ($basearch)
+baseurl=https://repo.example.com/ol/7/ol7_developer_EPEL/
+gpgkey=https://repo.example.com/ol/7/RPM-GPG-KEY-oracle-ol7
+gpgcheck=1
+enabled=0

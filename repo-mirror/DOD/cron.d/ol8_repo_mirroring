@@ -1,0 +1,2 @@
+22 0,6,12,18 * * * root cd /root/repo_mirror/ol8 && docker compose up -d
+
