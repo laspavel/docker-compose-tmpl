@@ -1,0 +1,31 @@
+global:
+  scrape_interval: 5s
+  scrape_timeout: 3s
+  evaluation_interval: 10s
+
+scrape_configs:
+- job_name: "kafka-broker"
+  static_configs:
+    - targets:
+        - kafka-1:8888
+        - kafka-2:8888
+        - kafka-3:8888
+      labels:
+        env: "dev"
+  relabel_configs:
+    - source_labels: [__address__]
+      target_label: hostname
+      regex: '([^:]+)(:[0-9]+)?'
+      replacement: '${1}'
+
+- job_name: "kafka-lag-exporter"
+  static_configs:
+    - targets:
+        - "kafka-lag-exporter:9999"
+      labels:
+        env: "dev"
+  relabel_configs:
+    - source_labels: [__address__]
+      target_label: instance
+      regex: '([^:]+)(:[0-9]+)?'
+      replacement: '${1}'

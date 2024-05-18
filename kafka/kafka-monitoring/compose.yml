@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  kafka-1:
+    image: bitnami/kafka:3.6.1
+    hostname: kafka-1
+    ports:
+      - "127.0.0.1:9093:9093"
+      - "127.0.0.1:8888:8888"
+    volumes:
+        - ${PWD}/prometheus-jmx-javaagent:/bitnami/kafka/libs
+    environment:
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT'
+      KAFKA_CFG_LISTENERS: 'INTERNAL://:29092,CONTROLLER://:29093,EXTERNAL://:9093'
+      KAFKA_CFG_ADVERTISED_LISTENERS: 'INTERNAL://kafka-1:29092,EXTERNAL://127.0.0.1:9093'
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: '1@kafka-1:29093,2@kafka-2:29093,3@kafka-3:29093'
+      KAFKA_CFG_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_CFG_DELETE_TOPIC_ENABLE: true
+      KAFKA_CFG_NUM_PARTITIONS: 18
+      KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_CFG_MIN_INSYNC_REPLICAS: 2
+      KAFKA_CFG_LOG_RETENTION_HOURS: -1
+      KAFKA_KRAFT_CLUSTER_ID: 'hbzK_JfMQgaAXtrWeOgnDA'
+      KAFKA_OPTS: '-javaagent:/bitnami/kafka/libs/jmx_prometheus_javaagent-0.20.0.jar=8888:/bitnami/kafka/libs/kafka_broker.yml'
+
+  kafka-2:
+    image: bitnami/kafka:3.6.1
+    hostname: kafka-2
+    ports:
+      - "127.0.0.1:9094:9094"
+      - "127.0.0.1:8889:8888"
+    volumes:
+      - ${PWD}/prometheus-jmx-javaagent:/bitnami/kafka/libs
+    environment:
+      KAFKA_CFG_NODE_ID: 2
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT'
+      KAFKA_CFG_LISTENERS: 'INTERNAL://:29092,CONTROLLER://:29093,EXTERNAL://:9094'
+      KAFKA_CFG_ADVERTISED_LISTENERS: 'INTERNAL://kafka-2:29092,EXTERNAL://127.0.0.1:9094'
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: '1@kafka-1:29093,2@kafka-2:29093,3@kafka-3:29093'
+      KAFKA_CFG_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_CFG_DELETE_TOPIC_ENABLE: true
+      KAFKA_CFG_NUM_PARTITIONS: 18
+      KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_CFG_MIN_INSYNC_REPLICAS: 2
+      KAFKA_CFG_LOG_RETENTION_HOURS: -1
+      KAFKA_KRAFT_CLUSTER_ID: 'hbzK_JfMQgaAXtrWeOgnDA'
+      KAFKA_OPTS: '-javaagent:/bitnami/kafka/libs/jmx_prometheus_javaagent-0.20.0.jar=8888:/bitnami/kafka/libs/kafka_broker.yml'
+
+  kafka-3:
+    image: bitnami/kafka:3.6.1
+    hostname: kafka-3
+    ports:
+      - "127.0.0.1:9095:9095"
+      - "127.0.0.1:8890:8888"
+    volumes:
+      - ${PWD}/prometheus-jmx-javaagent:/bitnami/kafka/libs
+    environment:
+      KAFKA_CFG_NODE_ID: 3
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT'
+      KAFKA_CFG_LISTENERS: 'INTERNAL://:29092,CONTROLLER://:29093,EXTERNAL://:9095'
+      KAFKA_CFG_ADVERTISED_LISTENERS: 'INTERNAL://kafka-3:29092,EXTERNAL://127.0.0.1:9095'
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: '1@kafka-1:29093,2@kafka-2:29093,3@kafka-3:29093'
+      KAFKA_CFG_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_CFG_DELETE_TOPIC_ENABLE: true
+      KAFKA_CFG_NUM_PARTITIONS: 18
+      KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_CFG_MIN_INSYNC_REPLICAS: 2
+      KAFKA_CFG_LOG_RETENTION_HOURS: -1
+      KAFKA_KRAFT_CLUSTER_ID: 'hbzK_JfMQgaAXtrWeOgnDA'
+      KAFKA_OPTS: '-javaagent:/bitnami/kafka/libs/jmx_prometheus_javaagent-0.20.0.jar=8888:/bitnami/kafka/libs/kafka_broker.yml'
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.1
+    volumes:
+      - ${PWD}/kafka-ui/config.yml:/etc/kafkaui/dynamic_config.yaml
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    ports:
+      - '8080:8080'
+
+  kafka-lag-exporter:
+    image: seglo/kafka-lag-exporter:0.8.2
+    restart: always
+    volumes:
+      - ${PWD}/kafka-lag-exporter:/opt/docker/conf
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ${PWD}/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:10.1.1
+    depends_on:
+      - prometheus
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ${PWD}/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ${PWD}/grafana/provisioning:/etc/grafana/provisioning
+      - ${PWD}/grafana/dashboards:/var/lib/grafana/dashboards
