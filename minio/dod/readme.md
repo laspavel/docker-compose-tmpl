@@ -40,6 +40,11 @@ mc admin policy attach myminio readonly-access-d03 --user user1
 mc alias set userminio http://localhost:9000 user1 123456789
 mc ls userminio/d03
 ```
+# Set Quota
+```
+mc quota set myminio/d01 --size 100MB
+mc quota set myminio/d02 --size 100GB
+```
 
 # Detach access policy
 ```
