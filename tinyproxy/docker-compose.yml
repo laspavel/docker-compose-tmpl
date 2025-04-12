@@ -1,0 +1,10 @@
+version: '3'
+services:
+  tinyproxy:
+    image: laspavel/tinyproxy:latest
+    ports:
+     - 8887:8888
+    volumes:
+      - ./tinyproxy.conf:/etc/tinyproxy/tinyproxy.conf:ro
+      - /etc/localtime:/etc/localtime:ro
+    restart: always
