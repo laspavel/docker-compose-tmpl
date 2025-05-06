@@ -1,6 +1,6 @@
 anymarkup==0.8.1
 anymarkup-core==0.8.0
-certifi==2018.1.18
+certifi==2023.7.22
 chardet==3.0.4
 Click==7.0
 colorama==0.4.1
