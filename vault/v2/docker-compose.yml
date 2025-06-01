@@ -1,0 +1,23 @@
+services:
+  vault:
+#    image: hashicorp/vault:1.15
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vault
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+    command: "sh /vault_init-unseal-entrypoint.sh"
+#    command: vault server -config=/vault/config/config.hcl
+    volumes:
+      - ./data:/vault
+      - ./vault_init-unseal-entrypoint.sh:/vault_init-unseal-entrypoint.sh:ro
+    restart: unless-stopped
