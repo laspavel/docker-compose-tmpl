@@ -1,0 +1,78 @@
+version: "3.7"
+
+networks:
+  nextcloud:
+
+secrets:
+  db_root_password:
+    external: true
+  db_password:
+    external: true
+
+volumes:
+  nextcloud_data:
+    external: true
+  nextcloud_logs:
+    external: true
+  nextcloud_db_data:
+    external: true
+  redis_data:
+    external: true
+
+services:
+  nextcloud:
+    image: nextcloud:28
+    networks:
+      - nextcloud
+    volumes:
+      - nextcloud_data:target:/var/www/html
+      - nextcloud_logs:/var/www/html/data/nextcloud.log
+    environment:
+      REDIS_HOST: nc-redis
+      NEXTCLOUD_TRUSTED_DOMAIN: nextcloud.${DOMAINNAME?Variable not set}
+      TRUSTED_PROXIES: 192.168.3.0/24
+      TRUSTED_DOMAINS: nextcloud.${DOMAINNAME?Variable not set}
+    deploy: 
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels: 
+        # Enable traefik
+
+  nc-db:
+    image: mariadb:10.5
+    hostname: nc-db
+    # Recommended database settings as listed in:
+    # https://docs.nextcloud.com/server/21/admin_manual/configuration_database/linux_database_configuration.html
+    command: --transaction-isolation=READ-COMMITTED --log-bin=msqyld-bin --binlog-format=ROW
+    networks:
+      - nextcloud
+    volumes:
+      - nextcloud_db_data:/mariadb
+    secrets:
+      - db_root_password
+      - db_password
+    environment:
+      MYSQL_USER: nextcloud
+      MYSQL_DATABASE: nextcloud
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  nc-redis:
+    image: redis:6.2-alpine
+    hostname: nc-redis
+    networks:
+      - nextcloud
+    volumes:
+      - redis_data:/data
+    deploy: 
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure

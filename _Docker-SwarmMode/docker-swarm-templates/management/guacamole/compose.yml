@@ -1,0 +1,67 @@
+version: "3.8"
+
+networks:
+  guacamole_network:
+
+volumes:
+  mariadb:
+
+configs:
+  guacamole_init:
+    file: ./guac_initdb.sql
+
+secrets:
+  guac_mysql_user:
+    external: true
+  guac_mysql_password:
+    external: true
+  guac_mysq_root_password:
+    external: true
+
+services:
+  guacd:
+    image: guacamole/guacd
+    networks:
+      - guacamole_network
+    deploy: 
+      mode: replicated
+      replicas: 1
+      
+  guac-mariadb:
+    image: linuxserver/mariadb:latest
+    networks:
+      - guacamole_network
+    configs:
+      # For initiating the database
+      - source: guacamole_init
+        target: /config/guac_initdb.sql
+    volumes:
+      - mariadb:/config
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    secrets:
+      - guac_mysql_root_password
+    environment:
+      - PUID=${PUID?Variable not set}
+      - PGID=${PGID?Variable not set}
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/guac_mysql_root_password
+    deploy: 
+      mode: replicated
+      replicas: 1
+      
+  guacamole:
+    image: guacamole/guacamole:latest
+    networks:
+      - guacamole_network
+    ports:
+      - "$GUACAMOLE_PORT:8080"
+    environment:
+      GUACD_HOSTNAME: guacd
+      MYSQL_HOSTNAME: guac-mariadb
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: guacamole
+      MYSQL_USER: ${GUAC_MYSQL_USER?Variable not set}
+      MYSQL_PASSWORD: ${GUAC_MYSQL_PASSWORD?Variable not set}
+    deploy: 
+      mode: replicated
+      replicas: 1

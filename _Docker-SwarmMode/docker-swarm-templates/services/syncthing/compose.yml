@@ -1,0 +1,36 @@
+# Resource: https://github.com/syncthing/syncthing/blob/main/README-Docker.md
+version: "3.6"
+
+volumes:
+  syncthing-config:
+  syncthing-private-data:
+  syncthing-public-data:
+
+services:
+  syncthing:
+    image: lscr.io/linuxserver/syncthing:latest
+    environment:
+      # If only volumes are used the container does not need to run as root
+      # - PUID=1000
+      # - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - syncthing-config:/config
+      - syncthing-private-data:/private
+      - syncthing-public-data:/public
+    ports:
+      # Web GUI
+      - 8384:8384
+
+      # Sync Protocol
+      - 22000:22000/tcp
+      - 22000:22000/udp
+      - 21027:21027/udp
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: 
+          - node.role == manager
+      restart_policy:
+        condition: on-failure

@@ -1,0 +1,28 @@
+# common
+README.md
+CHANGELOG.md
+docker-compose.yml
+docker-compose.override.yml
+.DS_Store
+
+# git
+.git
+.gitattributes
+.gitignore
+
+# laravel
+bootstrap/cache
+storage/framework
+storage/logs
+vendor
+
+# jetbrains
+.idea
+
+# Node
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+node_modules/

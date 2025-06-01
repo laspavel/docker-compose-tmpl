@@ -1,0 +1,74 @@
+version: '3'
+
+networks:
+  public:
+    external: true
+  ansible-semaphore:
+    external: false
+
+volumes:
+  semaphore_postgres:
+
+services:
+  postgres:
+    restart: unless-stopped
+    image: postgres:latest
+    hostname: postgres
+    networks:
+      - ansible-semaphore
+    volumes: 
+      - "semaphore_postgres:/var/lib/postgresql/data"
+      - "/etc/timezone:/etc/timezone:ro" 
+      - "/etc/localtime:/etc/localtime:ro"
+    environment:
+      POSTGRES_USER: semaphore_db_user
+      POSTGRES_PASSWORD: POSTGRESQL_PASSWORD
+      POSTGRES_DB: semaphore_db
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  semaphore:
+    image: semaphoreui/semaphore:latest
+    networks:
+      - ansible-semaphore
+      - public
+    environment:
+      ANSIBLE_HOST_KEY_CHECKING: 'False'
+      SEMAPHORE_DB_USER: semaphore_db_user
+      SEMAPHORE_DB_PASS: POSTGRESQL_PASSWORD
+      SEMAPHORE_DB_HOST: postgres
+      SEMAPHORE_DB_PORT: 5432
+      SEMAPHORE_DB_DIALECT: postgres
+      SEMAPHORE_DB: semaphore_db
+      SEMAPHORE_PLAYBOOK_PATH: /tmp/semaphore/
+      SEMAPHORE_ADMIN_PASSWORD: ANSIBLE_SEMAPHORE_PASSWORD
+      SEMAPHORE_ADMIN_NAME: "Administrator"
+      SEMAPHORE_ADMIN_EMAIL: admin@example.com
+      SEMAPHORE_ADMIN: Administrator
+      # SEMAPHORE_ACCESS_KEY_ENCRYPTION: 
+      SEMAPHORE_LDAP_ACTIVATED: 'yes' # set to yes if you wish to use ldap
+      SEMAPHORE_LDAP_HOST: authentik.example.com
+      SEMAPHORE_LDAP_PORT: '636'
+      SEMAPHORE_LDAP_NEEDTLS: 'yes'
+      SEMAPHORE_LDAP_DN_BIND: 'cn=systemuser,ou=users,dc=ldap,dc=example,dc=com'
+      SEMAPHORE_LDAP_PASSWORD: 'LDAP_PASSWORD'
+      SEMAPHORE_LDAP_DN_SEARCH: 'dc=ldap,dc=example,dc=com'
+      SEMAPHORE_LDAP_SEARCH_FILTER: "(\u0026(uid=%s)(memberOf=cn=ansible,ou=groups,dc=ldap,dc=example,dc=com))"
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro" 
+      - "/etc/localtime:/etc/localtime:ro"
+    depends_on:
+      - postgres
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.enable=true" 
+        - "traefik.docker.network=public" 
+
+        - "traefik.http.routers.semaphore-https.rule=Host(`ansible.example.com`)" 
+        - "traefik.http.routers.semaphore-https.entrypoints=https" 
+        - "traefik.http.routers.semaphore-https.tls=true" 
+        - "traefik.http.routers.semaphore-https.service=semaphore"
+        - "traefik.http.services.semaphore.loadbalancer.server.port=3000"

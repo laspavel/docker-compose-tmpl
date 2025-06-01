@@ -1,0 +1,92 @@
+version: "3.6"
+
+networks:
+  overleaf_network:
+
+services:
+  sharelatex:
+    image: sharelatex/sharelatex
+    ports:
+      - ${SHARELATEX_PORT}:80
+    networks:
+      - overleaf_network
+    volumes:
+      - ${DOCKERDATA_PATH?}/sharelatex:/var/lib/sharelatex
+    environment:
+      # Aestehtic changes
+      SHARELATEX_APP_NAME: Overleaf Workspace # change to custom name
+
+      # # Email
+      EMAIL_CONFIRMATION_DISABLED: "true"  # Disables email confirmation requirement
+      SHARELATEX_ADMIN_EMAIL: ${SHARELATEX_ADMIN_MAIL?}
+      SHARELATEX_EMAIL_FROM_ADDRESS: ${SHARELATEX_ADMIN_MAIL?}
+      # SHARELATEX_EMAIL_SMTP_HOST: smtp.example.com
+      # SHARELATEX_EMAIL_SMTP_PORT: 587
+      # SHARELATEX_EMAIL_SMTP_SECURE: false
+      # SHARELATEX_EMAIL_SMTP_USER=
+      # SHARELATEX_EMAIL_SMTP_PASS=
+      # SHARELATEX_EMAIL_SMTP_NAME: "Overleaf Workspace"
+      # SHARELATEX_CUSTOM_EMAIL_FOOTER: "This is a custom email footer"
+
+      # Sharing
+      ENABLED_LINKED_FILE_TYPES: "url,project_file"
+      ENABLE_CONVERSIONS: "true"  # Enables Thumbnail generation using ImageMagick
+
+      # temporary fix for LuaLaTex compiles
+      # see https://github.com/overleaf/overleaf/issues/695
+      TEXMFVAR: /var/lib/sharelatex/tmp/texmf-var
+  
+      # Same property, unfortunately with different names in
+      # different locations
+      SHARELATEX_REDIS_HOST: redis
+      REDIS_HOST: redis
+      SHARELATEX_MONGO_URL: mongodb://mongo/sharelatex
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  mongo:
+    image: mongo:4.4
+    command: "--replSet overleaf"
+    networks:
+      - overleaf_network
+    volumes:
+      - ${DOCKERDATA_PATH?}/mongo:/data/db
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  mongoinit:
+    image: mongo:4.4
+    networks:
+      - overleaf_network
+    entrypoint:
+      [
+        "mongo",
+        "--host",
+        "mongo:27017",
+        "--eval",
+        'rs.initiate({ _id: "overleaf", members: [ { _id: 0, host: "mongo:27017" } ] })',
+      ]
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  redis:
+    image: redis:5
+    networks:
+      - overleaf_network
+    volumes:
+      - ${DOCKERDATA_PATH?}/redis:/data
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+

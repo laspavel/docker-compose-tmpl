@@ -1,0 +1,126 @@
+version: "3.4"
+
+networks:
+  paperless-ngx:
+    external: false
+  public:
+    external: true
+
+volumes:
+  paperless-ngx_redis:
+  paperless-ngx_postgres:
+  paperless-ngx_data:
+  paperless-ngx_export:
+
+services:
+  redis:
+    image: docker.io/library/redis:latest
+    container_name: paperless-ngx_redis
+    hostname: paperless-ngx_redis
+    restart: unless-stopped
+    networks:
+      - paperless-ngx
+    volumes:
+      - paperless-ngx_redis:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
+  postgres:
+    image: docker.io/library/postgres:16
+    restart: unless-stopped
+    container_name: paperless-ngx_postgres
+    hostname: paperless-ngx_postgres
+    networks:
+      - paperless-ngx
+    volumes:
+      - paperless-ngx_postgres:/var/lib/postgresql/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      POSTGRES_DB: paperless_db
+      POSTGRES_USER: paperless_db_user
+      POSTGRES_PASSWORD: DB_PASSWORD
+
+  paperless-ngx:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: unless-stopped
+    container_name: paperless-ngx
+    hostname: paperless-ngx
+    networks:
+      - paperless-ngx
+      - public
+    depends_on:
+      - postgres
+      - redis
+      - gotenberg
+      - tika
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "-S", "--max-time", "2", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - paperless-ngx_data:/usr/src/paperless/data
+      - paperless-ngx_export:/usr/src/paperless/export
+    environment:
+      PAPERLESS_ADMIN_USER: admin
+      PAPERLESS_ADMIN_MAIL: no-reply@mail.com
+      PAPERLESS_ADMIN_PASSWORD: ADMIN_PASSWORD
+      PAPERLESS_URL: https://paperless-ngx.example.com
+      PAPERLESS_REDIS: redis://redis:6379
+      PAPERLESS_DBENGINE: postgresql
+      PAPERLESS_DBHOST: postgres
+      PAPERLESS_DBNAME: paperless_db
+      PAPERLESS_DBUSER: paperless_db_user
+      PAPERLESS_DBPASS: DB_PASSWORD
+
+      PAPERLESS_TIKA_ENABLED: 1
+      PAPERLESS_TIKA_GOTENBERG_ENDPOINT: http://gotenberg:3000
+      PAPERLESS_TIKA_ENDPOINT: http://tika:9998
+      PAPERLESS_OCR_LANGUAGE: hun
+      PAPERLESS_OCR_LANGUAGES: hun
+      PAPERLESS_FILENAME_FORMAT: "{document_type}/{correspondent}/{created_year}-{created_month}-{correspondent}-{title}"
+      PAPERLESS_DATE_ORDER: "Y,M,D"
+
+      PAPERLESS_ENABLE_HTTP_REMOTE_USER: "TRUE"
+      PAPERLESS_HTTP_REMOTE_USER_HEADER_NAME: HTTP_X_AUTHENTIK_USERNAME
+
+      USERMAP_UID: 33
+      USERMAP_GID: 33
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.enable=true" 
+        - "traefik.docker.network=public"
+        - "traefik.http.routers.paperless-ngx-https.rule=Host(`paperless-ngx.example.com`)" 
+        - "traefik.http.routers.paperless-ngx-https.entrypoints=https" 
+        - "traefik.http.routers.paperless-ngx-https.tls=true" 
+        - "traefik.http.routers.paperless-ngx-https.service=paperless-ngx" 
+        - "traefik.http.services.paperless-ngx.loadbalancer.server.port=8000"
+
+  gotenberg:
+    image: docker.io/gotenberg/gotenberg
+    restart: unless-stopped
+    container_name: paperless_gotenberg
+    hostname: paperless_gotenberg
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - paperless-ngx
+    command:
+      - "gotenberg"
+      - "--chromium-disable-routes=true"
+      - "--chromium-allow-list=file:///tmp/.*"
+
+  tika:
+    image: ghcr.io/paperless-ngx/tika:latest
+    container_name: paperless_tika
+    hostname: paperless_tika
+    restart: unless-stopped
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - paperless-ngx

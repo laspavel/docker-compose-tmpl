@@ -1,0 +1,34 @@
+version: '3'
+
+networks:
+  public:
+    external: true
+  
+volumes:
+  budget_data:
+
+services:
+  actual_server:
+    image: actualbudget/actual-server:latest
+    container_name: budget
+    #environment:
+      #- ACTUAL_NORDIGEN_SECRET_ID=
+      #- ACTUAL_NORDIGEN_SECRET_KEY=
+    networks:
+      - public
+    volumes:
+      - budget_data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.enable=true" 
+        - "traefik.docker.network=public"
+        - "traefik.http.routers.budget-https.rule=Host(`budget.example.com`)" 
+        - "traefik.http.routers.budget-https.entrypoints=https" 
+        - "traefik.http.routers.budget-https.tls=true" 
+        - "traefik.http.routers.budget-https.service=budget" 
+        - "traefik.http.services.budget.loadbalancer.server.port=5006"

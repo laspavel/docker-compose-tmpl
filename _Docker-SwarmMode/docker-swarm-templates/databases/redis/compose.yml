@@ -1,0 +1,15 @@
+version: "3.8"
+
+volumes:
+  redis_data:
+
+services:
+  redis:
+    image: redis:6.2-alpine
+    volumes:
+      - redis_data:/data
+    deploy: 
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure

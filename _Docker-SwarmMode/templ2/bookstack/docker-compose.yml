@@ -1,0 +1,62 @@
+version: "3"
+
+networks:
+  bookstack:
+    external: false
+  public:
+    external: true
+
+volumes:
+  bookstack_config:
+  bookstack_db:
+
+services:
+  bookstack:
+    image: lscr.io/linuxserver/bookstack:latest
+    container_name: bookstack
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - APP_URL=https://bookstack.example.com
+      - DB_HOST=mariadb
+      - DB_USER=bookstack
+      - DB_PASS=DB_PASSWORD
+      - DB_DATABASE=bookstack_db
+    volumes:
+      - "bookstack_config:/config"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    networks:
+      - bookstack
+      - public
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.enable=true" 
+        - "traefik.docker.network=public"
+        - "traefik.http.routers.bookstack-https.rule=Host(`bookstack.example.com`)" 
+        - "traefik.http.routers.bookstack-https.entrypoints=https" 
+        - "traefik.http.routers.bookstack-https.tls=true" 
+        - "traefik.http.routers.bookstack-https.service=bookstack" 
+        - "traefik.http.services.bookstack.loadbalancer.server.port=80"
+
+  mariadb:
+    image: lscr.io/linuxserver/mariadb:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - MYSQL_ROOT_PASSWORD=DB_ROOT_PASSWORD
+      - MYSQL_DATABASE=bookstack_db
+      - MYSQL_USER=bookstack
+      - MYSQL_PASSWORD=DB_PASSWORD
+    volumes:
+      - "bookstack_db:/config"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+    restart: unless-stopped
+    networks:
+      - bookstack

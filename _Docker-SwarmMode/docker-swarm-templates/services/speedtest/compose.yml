@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+  web:
+    image: openspeedtest/latest
+    ports:
+       - 3000:3000
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure

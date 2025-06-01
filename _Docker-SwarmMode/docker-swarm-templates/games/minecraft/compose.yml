@@ -1,0 +1,99 @@
+version: "3.8"
+
+
+networks:
+  routing_network:
+
+
+services:
+  forge-one:
+    image: itzg/minecraft-server:${FORGE_ONE_VERSION:-"latest"}
+    networks:
+      - routing_network
+    healthcheck:
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+      disable: true
+    environment:
+      SERVER_NAME: ${FORGE_ONE_SERVER_NAME:-"Dockerized-Forge-Minecraft-Server"}
+      #MOTD: ${FORGE_ONE_MOTD:-"Dockerized-Forge-Minecraft-Server"}
+      EULA: "TRUE"
+      TYPE: "FORGE"
+      FORGE_VERSION: ${FORGE_ONE_FORGE_VERSION:-"47.1.3"}
+      VERSION: ${FORGE_ONE_JAVA_VERSION:-"1.20.1"}
+      MODE: "survival"
+      MEMORY: ${FORGE_ONE_MEMORY:-"8G"}
+      # LEVEL_TYPE: "DEFAULT"
+      #ENABLE_RCON: ${FORGE_ONE_ENABLE_RCON:-"false"}
+      #RCON_PASSWORD: ${FORGE_ONE_RCON_PASSWORD:-"changeme"}
+      #RCON_PORT: ${SERVER_RCON_PORT:-"25575"}
+      SERVER_PORT: ${FORGE_PORT:-"25565"}
+      # ENABLE_WHITELIST: "true"
+      # WHITELIST: "${WHITELISTED_PLAYERS}?Variable not set"
+      # OPS: "${OPS_PLAYERS}?Variable not set"
+      #MAX_PLAYERS: "${FORGE_ONE_MAX_PLAYERS?Variable not set}"
+      ANNOUNCE_PLAYER_ACHIEVEMENTS: "true"
+      #SPAWN_ANIMALS: "true"
+      # SPAWN_MONSTERS: "true"
+      #PVP: ${FORGE_ONE_PVP:-"TRUE"}
+      # LEVEL: "cold"
+      # AUTOSTOP_TIMEOUT_INIT: "30"
+      # AUTOSTOP_TIMEOUT_EST: "20"
+      TZ: "${TZ?Variable not set}"
+      #GUI: ${ENABLE_GUI:-"False"}
+      CF_SERVER_MOD: /data/modpack.zip
+    user: "${UID?Variable not set}:${GID?Variable not set}"
+    volumes:
+      - ${FORGE_ONE_SERVER_PATH?Variable not set}:/data
+      - ${FORGE_ONE_MODPACK_PATH?Variable not set}:/data/modpack.zip
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role != manager
+          - node.labels.role.minecraft-host == true
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        max_failure_ratio: 0.3
+        order: stop-first
+
+  router:
+    image: ${MC_ROUTER_IMAGE:-itzg/mc-router}
+    depends_on:
+      - forge-one
+    environment:
+      MAPPING: |
+        ${FORGE_ONE_SUBDOMAIN?}.${DOMAINNAME?}=forge-one:${SERVER_PORT:-"25565"}
+    ports:
+      - ${SERVER_PORT:-"25565"}:${SERVER_PORT:-"25565"}
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role != manager
+          - node.labels.role.minecraft-host == true
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 60s
+        max_failure_ratio: 0.3
+        order: stop-first
+      

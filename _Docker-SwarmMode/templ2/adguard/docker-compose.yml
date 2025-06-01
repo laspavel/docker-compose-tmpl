@@ -1,0 +1,47 @@
+version: "3"
+
+networks:
+  public:
+    external: true
+
+volumes:
+  adguard_conf:
+  adguard_work:
+
+services:
+  adguard:
+    image: adguard/adguardhome
+    container_name: adguard
+    restart: always
+    networks:
+      - public
+    volumes:
+      - adguard_conf:/opt/adguardhome/conf
+      - adguard_work:/opt/adguardhome/work
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.enable=true" 
+        - "traefik.docker.network=public"
+        - "traefik.http.routers.adguard-https.rule=Host(`adguard.example.com`)" 
+        - "traefik.http.routers.adguard-https.entrypoints=https" 
+        - "traefik.http.routers.adguard-https.tls=true" 
+        - "traefik.http.routers.adguard-https.service=adguard" 
+        - "traefik.http.services.adguard.loadbalancer.server.port=3000"
+
+        - "traefik.tcp.routers.adguard-dns-tcp.rule=HostSNI(`*`)"
+        - "traefik.tcp.routers.adguard-dns-tcp.entrypoints=dns-tcp"
+        - "traefik.tcp.routers.adguard-dns-tcp.service=adguard-dns-tcp-svc"
+        - "traefik.tcp.services.adguard-dns-tcp-svc.loadbalancer.server.port=53"
+
+        - "traefik.udp.routers.adguard-dns-udp.entrypoints=dns-udp"
+        - "traefik.udp.routers.adguard-dns-udp.service=adguard-dns-udp-svc"
+        - "traefik.udp.services.adguard-dns-udp-svc.loadbalancer.server.port=53"
+
+        - "traefik.tcp.routers.adguard-dns-tls.rule=HostSNI(`*`)"
+        - "traefik.tcp.routers.adguard-dns-tls.entrypoints=dns-tls"
+        - "traefik.tcp.routers.adguard-dns-tls.service=adguard-dns-tls-svc"
+        - "traefik.tcp.services.adguard-dns-tls-svc.loadbalancer.server.port=853"

@@ -1,0 +1,130 @@
+version: "3.8"
+
+networks:
+  metrics_collection_network:
+    external: true
+
+configs:
+  prometheus-config:
+    file: ./prometheus/prometheus.yml
+  # rules-nodes:
+  #   file: ./prometheus/alert.rules_nodes
+  # rules-services:
+  #   file: ./prometheus/alert.rules_service-groups
+  # rules-tasks:
+  #   file: ./prometheus/alert.rules_tasks
+
+volumes:
+  prometheus_data:
+    driver: glusterfs
+    name: "dockerdatagluster/metrics_prometheus_data"
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - target: 9090
+        published: 9090
+        mode: ingress
+    user: root
+    configs:
+      - source: prometheus-config
+        target: /etc/prometheus/prometheus.yml
+      # If you are using alert rules, uncomment the following lines
+      # - source: rules-nodes
+      #   target: /etc/prometheus/alert.rules_nodes
+      # - source: rules-services
+      #   target: /etc/prometheus/alert.rules_service-groups
+      # - source: rules-tasks
+      #   target: /etc/prometheus/alert.rules_tasks
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--log.level=error'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+      # - '--alertmanager.url=http://alertmanager:9093'
+    volumes:
+      - prometheus_data:/prometheus
+    networks:
+      - metrics_collection_network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 500M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # alertmanager:
+  #   image: basi/alertmanager:${ALERTMANAGER_VERSION:-v0.8.0}
+  #   networks:
+  #     - monitoring
+  #     # - logging
+  #   ports:
+  #    - "9093:9093"
+  #   environment:
+  #     SLACK_API: ${SLACK_API:-YOURTOKENGOESHERE}
+  #     LOGSTASH_URL: http://logstash:8080/
+  #   command: -config.file=/etc/alertmanager/config.yml
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 1
+  #     resources:
+  #       limits:
+  #         cpus: '0.01'
+  #         memory: 32M
+  #       reservations:
+  #         cpus: '0.01'
+  #         memory: 16M
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    hostname: "{{.Node.ID}}"
+    volumes:
+      # The folders to monitor
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro     
+    networks:
+      - metrics_collection_network
+    deploy:
+      # A container is deployed on each node
+      mode: global
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
+  node-exporter:
+    # Customized image that add the NODE_ID environment variable
+    image: flaviostutz/docker-swarm-node-exporter:latest
+    hostname: "{{.Node.ID}}"
+    environment:
+      - NODE_ID={{.Node.ID}}
+    command:
+      - '--path.sysfs=/host/sys'
+      - '--path.procfs=/host/proc'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--no-collector.ipvs'
+    volumes:
+      # The folders to monitor
+      - /:/rootfs:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    networks:
+      - metrics_collection_network
+    deploy:
+      # A container is deployed on each node
+      mode: global
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M

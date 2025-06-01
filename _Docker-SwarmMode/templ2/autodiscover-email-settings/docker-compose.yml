@@ -1,0 +1,57 @@
+version: "3"
+
+networks:
+  public:
+    external: true
+
+services:
+  autodiscover-example-com:
+    image: monogramm/autodiscover-email-settings:latest
+    container_name: autodiscover
+    networks:
+      - public
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      # - COMPANY_NAME=Company
+      # - SUPPORT_URL=https://autodiscover.example.com
+      - DOMAIN=example.com
+      # IMAP configuration (host mandatory to enable)
+      - IMAP_HOST=imap.mail.com
+      - IMAP_PORT=993
+      - IMAP_SOCKET=SSL
+      # POP configuration (host mandatory to enable)
+      # - POP_HOST=pop3.example.com
+      # - POP_PORT=995
+      # - POP_SOCKET=SSL
+      # SMTP configuration (host mandatory to enable)
+      - SMTP_HOST=smtp.mail.com
+      - SMTP_PORT=465
+      - SMTP_SOCKET=SSL
+      # MobileSync/ActiveSync configuration (url mandatory to enable)
+      # - MOBILESYNC_URL=https://sync.example.com
+      # - MOBILESYNC_NAME=sync.example.com
+      # LDAP configuration (host mandatory to enable)
+      # - LDAP_HOST=ldap.example.com
+      # - LDAP_PORT=636
+      # - LDAP_SOCKET=SSL
+      # - LDAP_BASE=dc=ldap,dc=example,dc=com
+      # - LDAP_USER_FIELD=uid
+      # - LDAP_USER_BASE=ou=People,dc=ldap,dc=example,dc=com
+      # - LDAP_SEARCH=(|(objectClass=PostfixBookMailAccount))
+      # Apple mobile config identifiers (identifier mandatory to enable)
+      # - PROFILE_IDENTIFIER=com.example.autodiscover
+      # - PROFILE_UUID=92943D26-CAB3-4086-897D-DC6C0D8B1E86
+      # - MAIL_UUID=7A981A9E-D5D0-4EF8-87FE-39FD6A506FAC
+      # - LDAP_UUID=6ECB6BA9-2208-4ABF-9E60-4E9F4CD7309E
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.enable=true" 
+        - "traefik.docker.network=public"
+        - "traefik.http.routers.autodiscover-https.rule=Host(`autoconfig.example.com`, `autodiscover.example.com`)" 
+        - "traefik.http.routers.autodiscover-https.entrypoints=https" 
+        - "traefik.http.routers.autodiscover-https.tls=true" 
+        - "traefik.http.routers.autodiscover-https.service=autodiscover"

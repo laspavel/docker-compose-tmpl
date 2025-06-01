@@ -1,0 +1,70 @@
+version: "3"
+services:
+  app:
+    image: ${REGISTRY:-localhost:5000}/nginx-php:latest
+    working_dir: /var/www/html
+    environment:
+      TZ: ${TIMEZONE:-America/Sao_Paulo}
+    networks:
+      - internal
+      - public
+    deploy:
+      replicas: ${REPLICAS:-1}
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=public
+        - traefik.http.routers.${PROJECT:-app}-http.rule=Host(`${DOMAIN:-localhost}`)
+        - traefik.http.routers.${PROJECT:-app}-http.entrypoints=http
+        - traefik.http.routers.${PROJECT:-app}-http.middlewares=https-redirect
+        - traefik.http.routers.${PROJECT:-app}-https.rule=Host(`${DOMAIN:-localhost}`)
+        - traefik.http.routers.${PROJECT:-app}-https.entrypoints=https
+        - traefik.http.routers.${PROJECT:-app}-https.tls=true
+        - traefik.http.routers.${PROJECT:-app}-https.tls.certresolver=le
+        - traefik.http.services.${PROJECT:-app}.loadbalancer.server.port=80
+
+  database:
+    image: mariadb:10.2.38
+    volumes:
+      - database-data:/var/lib/mysql/
+    environment:
+      MARIADB_RANDOM_ROOT_PASSWORD: 'yes'
+      MARIADB_DATABASE: ${DB_DATABASE}
+      MARIADB_USER: ${DB_USERNAME}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      TZ: ${TIMEZONE:-America/Sao_Paulo}
+    networks:
+      - internal
+    deploy:
+      replicas: ${REPLICAS:-1}
+
+  redis:
+    image: redis:6.2.3
+    volumes:
+      - redis-data:/data
+    environment:
+      TZ: ${TIMEZONE:-America/Sao_Paulo}
+    networks:
+      - internal
+    deploy:
+      replicas: ${REPLICAS:-1}
+
+  elasticsearch:
+    image: elasticsearch:7.12.1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    environment:
+      TZ: ${TIMEZONE:-America/Sao_Paulo}
+    networks:
+      - internal
+    deploy:
+      replicas: ${REPLICAS:-1}
+
+volumes:
+  database-data:
+  redis-data:
+  elasticsearch-data:
+
+networks:
+  internal:
+  public:
+    external: true

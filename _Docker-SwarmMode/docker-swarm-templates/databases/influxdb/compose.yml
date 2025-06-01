@@ -1,0 +1,35 @@
+version: "3.8"
+
+networks:
+  metrics_collection_network:
+    external: true
+
+volumes:
+  influxdb_data:
+  influxdb_config:
+# If you are using glusterfs
+#   influxdb_data:
+#     driver: <plugin_alias>
+#     name: "<gluster_volume_name>/<docker_volume_name>"
+#   influxdb_config:
+#     driver: <plugin_alias>
+#     name: "<gluster_volume_name>/<docker_volume_name>"
+
+services:
+  influxdb:
+    image: influxdb:latest
+    networks:
+      - metrics_collection_network
+    ports:
+      - target: 8086
+        published: 8086
+        protocol: tcp
+        mode: ingress
+    volumes:
+     - influxdb_config:/var/lib/influxdb2
+     - influxdb_data:/etc/influxdb2
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure

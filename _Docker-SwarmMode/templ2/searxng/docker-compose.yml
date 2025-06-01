@@ -1,0 +1,55 @@
+version: '3.7'
+
+
+networks:
+  searxng:
+    external: false
+  public:
+    external: true
+
+volumes:
+  searxng_redis:
+  searxng_data:
+
+services:
+  redis:
+    container_name: searxng_redis
+    image: "redis:alpine"
+    command: redis-server --save "" --appendonly "no"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - searxng_redis:/data
+    networks:
+      - searxng
+    tmpfs:
+      - /var/lib/redis
+
+  searxng:
+    container_name: searxng
+    image: searxng/searxng:latest
+    networks:
+      - searxng
+      - public
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - searxng_data:/etc/searxng:rw
+    environment:
+      - SEARXNG_BASE_URL=https://searxng.example.com/
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.enable=true" 
+        - "traefik.docker.network=public"
+        - "traefik.http.routers.searxng-https.rule=Host(`searxng.example.com`)" 
+        - "traefik.http.routers.searxng-https.entrypoints=https" 
+        - "traefik.http.routers.searxng-https.tls=true" 
+        - "traefik.http.routers.searxng-https.service=searxng" 
+        - "traefik.http.services.searxng.loadbalancer.server.port=8080"

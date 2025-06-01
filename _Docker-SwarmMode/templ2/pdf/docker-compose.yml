@@ -1,0 +1,38 @@
+version: "3.3"
+
+networks:
+  public:
+    external: true
+
+volumes:
+  pdf_trainingdata:
+  pdf_extraconfigs:
+  pdf_customfiles:
+
+services:
+  stirling-pdf:
+    image: frooodle/s-pdf:latest
+    volumes:
+      - pdf_trainingdata:/usr/share/tesseract-ocr/4.00/tessdata #Required for extra OCR languages
+      - pdf_extraconfigs:/configs
+      - pdf_customfiles:/customFiles/
+    environment:
+      - "APP_LOCALE=de_DE"
+      - "APP_HOME_NAME=Stirling PDF"
+      - "APP_HOME_DESCRIPTION=Your locally hosted one-stop-shop for all your PDF needs."
+      - "APP_NAVBAR_NAME=Stirling PDF"
+      - "APP_ROOT_PATH=/"
+      - "ALLOW_GOOGLE_VISIBILITY=false"
+    networks:
+      - public
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=public"
+        - "traefik.http.routers.pdf-https.rule=Host(`pdf.example.com`)"
+        - "traefik.http.routers.pdf-https.entrypoints=https"
+        - "traefik.http.routers.pdf-https.tls=true"
+        - "traefik.http.routers.pdf-https.service=pdf"
+        - "traefik.http.services.pdf.loadbalancer.server.port=8080"

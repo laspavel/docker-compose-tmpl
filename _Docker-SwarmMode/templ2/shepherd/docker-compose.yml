@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+  gantry:
+    image: shizunge/gantry
+    environment:
+      - GANTRY_CLEANUP_IMAGES=3
+      - GANTRY_SLEEP_SECONDS=86400
+      - TZ=Europe/Budapest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      placement:
+        constraints:
+        - node.role == manager

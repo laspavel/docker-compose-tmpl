@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  homarr:
+    image: ghcr.io/ajnart/homarr:latest
+    ports:
+      - ${HOMARR_PORT}:7575
+    networks:
+      - traefik_public
+    volumes:
+      - ${DOCKERDATA_PATH?}/config:/app/data/configs
+      - ${DOCKERDATA_PATH?}/icons:/app/data/icons
+      - ${DOCKERDATA_PATH?}/images:/app/public/img
+    environment:
+      - DOMAINNAME=${DOMAINNAME?}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+      

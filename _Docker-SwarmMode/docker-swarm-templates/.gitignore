@@ -1,0 +1,7 @@
+# General data folders
+data/
+.venv/
+.secrets/
+
+# Overleaf components
+config/

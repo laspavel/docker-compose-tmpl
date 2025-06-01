@@ -1,0 +1,29 @@
+version: "3.8"
+
+volumes:
+  mariadb_data:
+
+secrets:
+  db_root_password:
+    external: true
+  db_password:
+    external: true
+
+services:
+  mariadb:
+    image: mariadb:10.5
+    volumes:
+      - mariadb_data:/mariadb
+    secrets:
+      - db_root_password
+      - db_password
+    environment:
+      MYSQL_USER: ${MYSQL_USER?}
+      MYSQL_DATABASE: ${MYSQL_DATABASE?}
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure

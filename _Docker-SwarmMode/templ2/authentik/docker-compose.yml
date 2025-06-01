@@ -1,0 +1,156 @@
+version: '3.4'
+
+networks:
+  authentik:
+    external: false
+  public:
+    external: true
+
+volumes:
+  authentik_postgres:
+  authentik_redis:
+  authentik_media:
+  authentik_templates:
+  authentik_geoip:
+  authentik_certs:
+
+
+services:
+  postgresql:
+    image: postgres:16
+    hostname: postgresql
+    container_name: postgresql
+    restart: unless-stopped
+    networks:
+      - authentik
+    volumes:
+      - authentik_postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=POSTGRESQL_PASSWORD
+      - POSTGRES_USER=authentik_db_user
+      - POSTGRES_DB=authentik_db
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  redis:
+    image: redis:alpine
+    command: --save 60 1 --loglevel warning
+    restart: unless-stopped
+    networks:
+      - authentik
+    volumes:
+      - authentik_redis:/data
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  server:
+    image: ghcr.io/goauthentik/server:latest
+    restart: unless-stopped
+    command: server
+    environment:
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_POSTGRESQL__HOST: postgresql
+      AUTHENTIK_POSTGRESQL__USER: authentik_db_user
+      AUTHENTIK_POSTGRESQL__NAME: authentik_db
+      AUTHENTIK_POSTGRESQL__PASSWORD: POSTGRESQL_PASSWORD
+      AUTHENTIK_SECRET_KEY: AUTHENTIK_SECRET_KEY
+      # SMTP Host Emails are sent to
+      AUTHENTIK_EMAIL__HOST: smtp.mail.com
+      AUTHENTIK_EMAIL__PORT: 465
+      # Optionally authenticate (don't add quotation marks to your password)
+      AUTHENTIK_EMAIL__USERNAME: authentik@example.com
+      AUTHENTIK_EMAIL__PASSWORD: AUTHENTIK_EMAIL_PASSWORD
+      # Use StartTLS
+      AUTHENTIK_EMAIL__USE_TLS: "true"
+      # Use SSL
+      AUTHENTIK_EMAIL__USE_SSL: "false"
+      AUTHENTIK_EMAIL__TIMEOUT: 10
+      # Email address authentik will send from, should have a correct @domain
+      AUTHENTIK_EMAIL__FROM: no-reply@example.com
+      AUTHENTIK_AVATARS: gravatar     
+    volumes:
+      - authentik_media:/media
+      - authentik_templates:/templates
+      - authentik_geoip:/geoip
+    networks:
+      - authentik
+      - public
+      - traefik_crowdsec
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=public"
+
+        - "traefik.http.routers.authentik-https.rule=Host(`authentik.example.com`)"
+        - "traefik.http.routers.authentik-https.entrypoints=https"
+        - "traefik.http.routers.authentik-https.tls=true"
+        - "traefik.http.routers.authentik-https.service=authentik"
+        - "traefik.http.services.authentik.loadbalancer.server.port=9000"
+  
+  worker:
+    image: ghcr.io/goauthentik/server:latest
+    restart: unless-stopped
+    command: worker
+    environment:
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_POSTGRESQL__HOST: postgresql
+      AUTHENTIK_POSTGRESQL__USER: authentik_db_user
+      AUTHENTIK_POSTGRESQL__NAME: authentik_db
+      AUTHENTIK_POSTGRESQL__PASSWORD: POSTGRESQL_PASSWORD
+      AUTHENTIK_SECRET_KEY: AUTHENTIK_SECRET_KEY
+      # SMTP Host Emails are sent to
+      AUTHENTIK_EMAIL__HOST: smtp.mail.com
+      AUTHENTIK_EMAIL__PORT: 465
+      # Optionally authenticate (don't add quotation marks to your password)
+      AUTHENTIK_EMAIL__USERNAME: authentik@example.com
+      AUTHENTIK_EMAIL__PASSWORD: AUTHENTIK_EMAIL_PASSWORD
+      # Use StartTLS
+      AUTHENTIK_EMAIL__USE_TLS: "true"
+      # Use SSL
+      AUTHENTIK_EMAIL__USE_SSL: "false"
+      AUTHENTIK_EMAIL__TIMEOUT: 10
+      # Email address authentik will send from, should have a correct @domain
+      AUTHENTIK_EMAIL__FROM: no-reply@example.com
+      AUTHENTIK_AVATARS: gravatar     
+    user: root
+    networks:
+      - authentik
+    volumes:
+      - authentik_media:/media
+      - authentik_certs:/certs
+      - /var/run/docker.sock:/var/run/docker.sock
+      - authentik_templates:/templates
+      - authentik_geoip:/geoip
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  authentik_ldap:
+    image: ghcr.io/goauthentik/ldap:latest
+    environment:
+      AUTHENTIK_HOST: https://authentik.example.com
+      AUTHENTIK_INSECURE: "true"
+      # AUTHENTIK_TOKEN: 
+    networks:
+      - authentik
+      - public
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=public"
+
+        - "traefik.tcp.routers.authentik-ldap.rule=HostSNI(`*`)"
+        - "traefik.tcp.routers.authentik-ldap.entrypoints=ldap"
+        - "traefik.tcp.routers.authentik-ldap.service=authentik-ldap-svc"
+        - "traefik.tcp.services.authentik-ldap-svc.loadbalancer.server.port=3389"
+
+        - "traefik.tcp.routers.authentik-ldaps.rule=HostSNI(`*`)"
+        - "traefik.tcp.routers.authentik-ldaps.entrypoints=ldaps"
+        - "traefik.tcp.routers.authentik-ldaps.service=authentik-ldaps-svc"
+        - "traefik.tcp.services.authentik-ldaps-svc.loadbalancer.server.port=6636"

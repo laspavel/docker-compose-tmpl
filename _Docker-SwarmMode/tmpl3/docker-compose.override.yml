@@ -1,0 +1,34 @@
+version: "3"
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: docker/nginx-php/Dockerfile
+    ports:
+      - ${HTTP_PORT}:80
+    volumes:
+      - .:/var/www/html
+
+  database:
+    ports:
+      - ${DB_PORT}:3306
+
+  redis:
+    ports:
+      - ${REDIS_PORT}:6379
+
+  elasticsearch:
+    ports:
+      - ${ELASTIC_PORT}:9200
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - ${MAILHOG_PORT}:8025
+    networks:
+      - internal
+
+networks:
+  internal:
+  public:
+    external: false

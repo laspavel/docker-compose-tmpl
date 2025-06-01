@@ -1,0 +1,136 @@
+#!/bin/bash
+# TODO:
+# - Use ".env" file if exists
+# REFS:
+# - https://stackoverflow.com/questions/44694640/docker-swarm-with-image-versions-externalized-to-env-file
+# - https://github.com/moby/moby/issues/29133#issuecomment-442912378 - docker stack deploy doesn't load .env file
+
+#set -x
+
+#ME_REL=${0}
+#ME_ABS=$(readlink -f "${0}")
+#MYFILENAME=$(basename "${ME_ABS}")
+#MYFULLPATH=$(dirname "${ME_ABS}")
+
+
+DEBUG () {
+    if [[ $MYDEBUGFLAG == "true" ]]; then
+        echo "DEBUG: $@"
+        # read
+    fi
+}
+
+do_help() {
+	cat <<MARKER
+$MYNAME - helps you create and manage docker swarm stacks, uses stack.yml as the default docker-compose (stack) file and current directoryname as the stack name.
+Syntax: $MYNAME [ <command> ] [ <options> ]
+You can use below commands for all the VMs:
+  deploy          - Deploy the stack specified in stack.yml with the current directoryname as the stack name. You can use -c, --compose-file flags to specify a stack file other than stack.yml
+  rm              - Remove stack
+  ls, services    - List services in stack
+  stop            - Stop all the services in stack
+  ps              - List all the tasks in stack
+  psr             - List all the running tasks in stack
+  psw             - Watch all the tasks in stack
+MARKER
+}
+
+
+COMPOSE_FILE_NAME="stack.yml"
+MYFULLPATH=$(pwd)
+MYDIRNAME=$(basename "${MYFULLPATH}")
+STACK_ID=${MYDIRNAME}
+STACK_NAME="${STACK_ID}"
+
+CMD=$1; shift || true
+PARAMS_REST=$@
+ALLHOSTS=""
+
+# ENV_FILE=".env"
+# if test -f ${ENV_FILE}; then            # you may use ENV variables in stack.yml creating an ".env" file in same directory
+#   echo "Sourcing env file: ${ENV_FILE}"
+#   cat ${ENV_FILE}
+#   source "${ENV_FILE}"
+# fi
+
+case "$CMD" in
+  "-c"|"--compose-file")    COMPOSE_FILE_NAME=$1; shift; CMD=$1;;
+  "ls")                     CMD="services";;
+  "")                       CMD="deploy";;
+esac
+
+case "$CMD" in
+
+  rm|services)
+    MYCMD="docker stack ${CMD} ${STACK_NAME}"
+    DEBUG "### Running: ${MYCMD}"
+    ${MYCMD}
+    exit $?
+  ;;
+
+  deploy)
+    echo "Deploying docker stack file ${COMPOSE_FILE_NAME} with stack name ${STACK_NAME}"
+
+    # MYCMD='export $(cat .env) > /dev/null 2>&1; docker stack deploy '${STACK_NAME}' --compose-file '${COMPOSE_FILE_NAME}' --with-registry-auth'
+    MYCMD="docker stack deploy ${STACK_NAME} --compose-file ${COMPOSE_FILE_NAME} --with-registry-auth"
+    echo "Runing command: ${MYCMD}"
+    ${MYCMD}
+    sleep 5
+    watch -n1 "docker stack ps ${STACK_NAME} && echo 'INFO: You may exit with Ctrl-C...'"
+    exit $?
+  ;;
+
+  ps)
+    docker stack ps ${STACK_NAME}
+    exit $?
+  ;;
+
+  psr)
+    docker stack ps ${STACK_NAME} | grep 'Running'
+    exit $?
+  ;;
+
+  psw)
+    watch -n1 "docker stack ps ${STACK_NAME} && echo 'INFO: You may exit with Ctrl-C...'"
+    exit $?
+  ;;
+
+  stop)
+    SERVICE_LIST="$(docker stack services ${STACK_NAME} --quiet)"
+    for SERVICE_ID in ${SERVICE_LIST}; do
+      SERVICE_NAME=$(docker service inspect --format='{{.Spec.Name}}' ${SERVICE_ID})
+      docker service update ${SERVICE_NAME} --replicas 0
+    done
+    exit $?
+  ;;
+
+  restart)
+    SERVICE_LIST="$(docker stack services ${STACK_NAME} --quiet)"
+    for SERVICE_ID in ${SERVICE_LIST}; do
+      SERVICE_NAME=$(docker service inspect --format='{{.Spec.Name}}' ${SERVICE_ID})
+      /root/bin/docker-service-restart.sh ${SERVICE_NAME}
+    done
+    exit $?
+  ;;
+
+  logs)
+    echo "WARNING: I can only show logs of stack containers running on this server."
+    SERVICE_LIST="$(docker stack services ${STACK_NAME} --quiet)"
+    for SERVICE_ID in ${SERVICE_LIST}; do
+      SERVICE_NAME=$(docker service inspect --format='{{.Spec.Name}}' ${SERVICE_ID})
+      CID=$(docker ps --filter name="${SERVICE_NAME}" --quiet); LOGFILE=$(docker inspect ${CID} | grep -i LogPath | cut -d\" -f4);
+      LOGFILE_LIST="${LOGFILE_LIST} ${LOGFILE}"
+    done
+    echo "Log files: ${LOGFILE_LIST}"
+    tail -f ${LOGFILE_LIST}
+    exit $?
+  ;;
+
+  *|help)
+    do_help
+    exit $?
+  ;;
+
+esac
+
+exit

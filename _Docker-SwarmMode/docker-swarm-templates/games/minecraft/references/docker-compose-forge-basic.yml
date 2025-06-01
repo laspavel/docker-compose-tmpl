@@ -1,0 +1,92 @@
+version: '3.8'
+
+####################################################################
+#                       FORGE_GENERIC_PACK                         #
+# Date: 20221005                                                   #
+# Mod: Better Minecraft Plus v40                                   #
+# Game Version: 1.16.5                                             #
+####################################################################
+services:
+  mc_bmp:
+    image: itzg/minecraft-server:java8
+    container_name: mc_bmp
+    ports:
+      - 25565:25565
+
+####################################################################
+#                     Volume and Folder Access                     #
+#                                                                  #
+# This section defines what folders and volumes you want to give   #
+# this container access to. It is recommended to leaves these set  #
+# to the default values unless you know what you are doing.        #
+#                                                                  #
+# Place your mod zip file in a folder called 'modpacks' in the     #
+# same directory you place this docker-compose file.               #
+#                                                                  #
+# Specify the data volume name or directory here as well.          #
+# In this example the volume name is 'data'. When docker creates   #
+# the volume it will add what ever name you give it here to the    #
+# end of the container name specified above. In this example it    #
+# would be named 'mc_atm6_data'. If you change this be sure to     #
+# update the volume name at the bottom of this config.             #
+####################################################################
+    volumes:
+      - ./modpacks:/modpacks:ro
+      - data:/data
+
+    deploy:
+      restart_policy:
+          condition: unless-stopped
+          delay: 5s
+          max_attempts: 3
+          window: 120s
+
+    environment:
+      EULA: "true"
+
+####################################################################
+#                          FORGE INSTALL                           #
+#                                                                  #
+# Sets install type to FORGE and specifys the zip folder name      #
+# and location of your mod pack.                                   #
+#                                                                  #
+# TYPE: Defines the install type as FORGE                          #
+#                                                                  #
+# VERSION: Defines the version of MC the modpack is based on.      #
+#                                                                  #
+# FORGE_VERSION: Defines the version of FORGE the modpack uses.     #
+#               This can usually be found in the modpack.zip as    #
+#               installer.jar                                      #
+#                                                                  #
+# GENERIC_PACK: Define where the modpack.zip is located.           #
+#                                                                  #
+# Place your mod zip file in a folder called 'modpacks' in the     #
+# same directory you place this docker-compose file.               #
+####################################################################
+      TYPE: FORGE
+      VERSION: 1.16.5
+      FORGE_VERSION: 36.2.39
+      GENERIC_PACK: /modpacks/Better+MC+Server+Pack+PLUS+1.16.5+v40+HF.zip
+      MEMORY: "32G"
+      ENABLE_ROLLING_LOGS: "true"
+      TZ: "Europe/Amsterdam"
+
+####################################################################
+#                       Minecraft Game Options                     #
+#                                                                  #
+# List any game options you want to define here. A full list can   #
+# be found on the readme.md page on github.                        #
+####################################################################
+      OVERRIDE_SERVER_PROPERTIES: "true"
+      DIFFICULTY: "easy"
+      MAX_TICK_TIME: "-1"
+      VIEW_DISTANCE: 10
+      ALLOW_FLIGHT: "true"
+      OPS: ""
+      MAX_PLAYERS: 10
+      PVP: "false"
+      LEVEL_TYPE: "biomesoplenty"
+      MOTD: "Welcome Home"
+
+volumes:
+  data:

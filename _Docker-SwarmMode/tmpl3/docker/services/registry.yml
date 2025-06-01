@@ -1,0 +1,32 @@
+version: '3.3'
+
+services:
+  registry:
+    image: registry:2
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /data
+      TZ: ${TIMEZONE:-America/Sao_Paulo}
+    volumes:
+      - registry:/data
+    networks:
+      - public
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=public
+        - traefik.port=5000
+        - traefik.http.routers.registry-https.rule=Host(`${CLUSTER_DOMAIN:-localhost}`)
+        - traefik.http.routers.registry-https.entrypoints=registry
+        - traefik.http.routers.registry-https.tls=true
+        - traefik.http.routers.registry-https.tls.certresolver=le
+        - traefik.http.services.registry.loadbalancer.server.port=5000
+
+volumes:
+  registry:
+
+networks:
+  public:
+    external: true

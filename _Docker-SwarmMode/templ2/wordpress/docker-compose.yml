@@ -1,0 +1,78 @@
+version: '3.1'
+
+networks:
+  wordpress:
+    external: false
+  public:
+    external: true
+
+volumes:
+  wordpress_app:
+  wordpress_mariadb:
+  wordpress_redis:
+
+services:
+  wordpress:
+    image: wordpress
+    restart: unless-stopped
+    environment:
+      WORDPRESS_DB_HOST: mariadb
+      WORDPRESS_DB_USER: wordpress_db_user
+      WORDPRESS_DB_PASSWORD: DB_PASSWORD
+      WORDPRESS_DB_NAME: wordpress_db
+    networks:
+      - public
+      - wordpress
+    volumes:
+      - wordpress_app:/var/www/html
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=public"
+
+        - "traefik.http.routers.wordpress-https.rule=Host(`wordpress.example.com`, `example.com` , `www.example.com`)"
+        - "traefik.http.routers.wordpress-https.entrypoints=https"
+        - "traefik.http.routers.wordpress-https.tls=true"
+        - "traefik.http.routers.wordpress-https.service=wordpress"
+        - "traefik.http.services.wordpress.loadbalancer.server.port=80"
+
+  mariadb:
+    image: mariadb
+    container_name: mariadb_wordpress
+    hostname: mariadb_wordpress
+    restart: unless-stopped
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    environment:
+       - MARIADB_ROOT_PASSWORD=DB_ROOT_PASSWORD
+       - MARIADB_USER=wordpress_db_user
+       - MARIADB_PASSWORD=DB_PASSWORD
+       - MARIADB_DATABASE=wordpress_db
+    networks:
+       - wordpress
+    volumes:
+       - wordpress_mariadb:/var/lib/mysql
+       - /etc/timezone:/etc/timezone:ro
+       - /etc/localtime:/etc/localtime:ro
+    deploy:
+      mode: replicated
+      replicas: 1
+  
+  redis:
+    image: redis
+    container_name: redis
+    hostname: redis
+    restart: unless-stopped
+    command: --save 60 1 --loglevel warning
+    networks:
+      - wordpress
+    volumes:
+      - wordpress_redis:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    deploy:
+      mode: replicated
+      replicas: 1

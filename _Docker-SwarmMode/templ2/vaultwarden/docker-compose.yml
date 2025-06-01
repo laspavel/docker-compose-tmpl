@@ -1,0 +1,68 @@
+version: "3.7"
+
+networks:
+  vaultwarden:
+    external: false
+  public:
+    external: true
+
+volumes:
+  vaultwarden_app:
+  vaultwarden_postgres:
+
+services:
+  vaultwarden:
+    image: "vaultwarden/server:latest"
+    hostname: "vaultwarden"
+    volumes:
+      - vaultwarden_app:/data/
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      # - "ADMIN_TOKEN=
+      - "DOMAIN=https://vaultwarden.example.com"
+      - "SIGNUPS_ALLOWED=false"
+      - "SHOW_PASSWORD_HINT=true"
+      - "SMTP_HOST=smtp.mail.com"
+      - "SMTP_USERNAME=test@example.com"
+      - "SMTP_PASSWORD=MAIL_PASSWORD"
+      - "SMTP_FROM=no-reply@example.com"
+      - "SMTP_PORT=465"
+      - "SMTP_SECURITY=force_tls"
+      - 'DATABASE_URL=postgresql://vaultwarden_db_user:DB_PASSWORD@postgres:5432/vaultwarden_db'
+    networks:
+      - vaultwarden
+      - public
+    depends_on:
+      - postgres
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=public"
+        
+        - "traefik.http.routers.vaultwarden-https.rule=Host(`vaultwarden.example.com`)"
+        - "traefik.http.routers.vaultwarden-https.entrypoints=https"
+        - "traefik.http.routers.vaultwarden-https.tls=true"
+        - "traefik.http.routers.vaultwarden-https.service=vaultwarden"
+        - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"
+
+  postgres:
+    image: postgres:16
+    container_name: postgres_vaultwarden
+    hostname: postgres_vaultwarden
+    restart: always
+    environment:
+       - POSTGRES_USER=vaultwarden_db_user
+       - POSTGRES_PASSWORD=DB_PASSWORD
+       - POSTGRES_DB=vaultwarden_db
+    networks:
+       - vaultwarden
+    volumes:
+       - vaultwarden_postgres:/var/lib/postgresql/data
+       - /etc/timezone:/etc/timezone:ro
+       - /etc/localtime:/etc/localtime:ro
+    deploy:
+      mode: replicated
+      replicas: 1
